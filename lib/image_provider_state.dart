@@ -24,8 +24,9 @@ class _ImageProviderState {
     );
   }
 
-  factory _ImageProviderState.init() =>
-      const _ImageProviderState(false, false, null);
+  factory _ImageProviderState.init() {
+    return const _ImageProviderState(false, false, null);
+  }
 
   const _ImageProviderState(
     final this.isLoading,

@@ -1,6 +1,6 @@
 part of disposable_cached_images;
 
-final _imageDataBaseProvider = Provider<_ImageDataBase>(
+final _imageDataBaseProvider = Provider.autoDispose<_ImageDataBase>(
   (final ref) => throw UnimplementedError(),
 );
 
@@ -58,6 +58,11 @@ class _ImageDataBase {
     return imageBytesFile.readAsBytes();
   }
 
+  Future<Uint8List> getBytesFormAssets(final String imagePath) async {
+    final imageBytesFile = File(imagePath);
+    return imageBytesFile.readAsBytes();
+  }
+
   static Future<void> _clearCache() async {
     await File(cachePath).delete(recursive: true);
 
@@ -82,7 +87,10 @@ class _KeyCheckClass {
   final List<String> keys;
   final String key;
 
-  const _KeyCheckClass({required final this.keys, required final this.key});
+  const _KeyCheckClass({
+    required final this.keys,
+    required final this.key,
+  });
 
   @override
   bool operator ==(final Object other) {

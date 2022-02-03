@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 class ImageWidget extends StatelessWidget {
   final String imageUrl;
+
   const ImageWidget({
     Key? key,
     required this.imageUrl,
@@ -20,7 +21,7 @@ class ImageWidget extends StatelessWidget {
           ),
         ),
       ),
-      child: DisposableCachedImageWidget(
+      child: DisposableNetworkImage(
         imageUrl: imageUrl,
         onLoading: (context) => const Center(
           child: Icon(Icons.downloading),

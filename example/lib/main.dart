@@ -30,7 +30,18 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(actions: [
+        IconButton(
+          onPressed: () async {
+            await clearCache();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Cache cleared!')),
+            );
+          },
+          icon: const Icon(Icons.clear),
+        )
+      ]),
       body: GridView.builder(
         padding: const EdgeInsets.all(20),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -39,13 +50,15 @@ class Home extends StatelessWidget {
           crossAxisSpacing: 20,
         ),
         itemCount: images.length,
-        itemBuilder: (context, index) => ImageWidget(imageUrl: images[index]),
+        itemBuilder: (context, index) => ImageWidget(
+          imageUrl: images[index],
+        ),
       ),
     );
   }
 
   static final images = List.generate(
     500,
-    (final i) => 'https://picsum.photos/id/$i/200/300',
+    (final i) => 'https://picsum.photos/id/$i/2000/3000',
   );
 }

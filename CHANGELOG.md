@@ -1,3 +1,4 @@
-## 0.0.1
+## 0.0.3
 
-Initial release.
+Support assets images.
+Remove Dio in favor of http.

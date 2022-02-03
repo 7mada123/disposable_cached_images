@@ -22,11 +22,13 @@ and the Flutter guide for
 
 -->
 
-Flutter package for displaying images from the Internet and keeping them in the cache directory with disposal feature to reduce bandwidth and memory usage.
+A flutter package for displaying and releasing images from memory.
 
 ## Features
 
-Download images from the Internet and keep them in the cache directory.
+Download and display images from the Internet and keep them in the cache directory.
+
+Display images assets.
 
 Cancel the download if the image widget has been disposed to reduce bandwidth usage.
 
@@ -41,55 +43,83 @@ Add `scaffoldMessengerKey` to the `MaterialApp`
 > you can read more about `scaffoldMessengerKey` on [docs.flutter](https://docs.flutter.dev/release/breaking-changes/scaffold-messenger)
 
 ```dart
-    MaterialApp(
-    home: const Home(),
-    scaffoldMessengerKey: scaffoldMessengerKey,
-    );
+MaterialApp(
+home: const Home(),
+scaffoldMessengerKey: scaffoldMessengerKey,
+);
 
 
-    final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 ```
 
 In the main method use `runAppWithDisposableCachedImage` instead of `runApp` and pass it the `scaffoldMessengerKey` to initialize the package
-> the `scaffoldMessengerKey.currentContext` is used to precache the image ahead of being request in the ui, [learn more about precacheImage](https://api.flutter.dev/flutter/widgets/precacheImage.html). 
+
+> the `scaffoldMessengerKey.currentContext` is used to precache the image ahead of being request in the ui, [learn more about precacheImage](https://api.flutter.dev/flutter/widgets/precacheImage.html).
 
 ```dart
-    void main() {
-      runAppWithDisposableCachedImage(
-        const MyApp(),
-        scaffoldMessengerKey: scaffoldMessengerKey,
-      );
-    }
+void main() {
+  runAppWithDisposableCachedImage(
+    const MyApp(),
+    scaffoldMessengerKey: scaffoldMessengerKey,
+  );
+}
 ```
 
 > If you are already using [flutter_riverpod](https://pub.dev/packages/flutter_riverpod), you can pass `ProviderScope` arguments `observers` and `overrides` to the `runAppWithDisposableCachedImage` function.
 
-### Using `DisposableCachedImageWidget`
+Now your app is ready to use the package.
 
-Now your app is ready to use the package, use `DisposableCachedImageWidget` where you want to display images.
+### Displaying images
+
+Use `DisposableNetworkImage` to display images form internet.
 
 ```dart
-    DisposableCachedImageWidget(
-    imageUrl: imageUrl,
-    onLoading: (context) => const Center(
-    child: Icon(Icons.downloading),
-      ),
-    onError: (context, reDownload) => Center(
-    child: IconButton(
-    onPressed: reDownload,
-    icon: const Icon(Icons.download),
-        ),
-      ),
-    );
+DisposableNetworkImage(
+imageUrl: 'https://picsum.photos/id/23/200/300',
+);
+```
+
+Use `DisposableAssetsImage` to display images form assets.
+
+```dart
+DisposableAssetsImage(
+imagePath: 'images/a_dot_burr.jpeg',
+);
+```
+
+You can display your custom widgets while the image is loading, has an error and when it is ready as shown below
+
+```dart
+DisposableNetworkImage(
+ imageUrl: imageUrl,
+ onLoading: (context) => const Center(
+   child: Icon(Icons.downloading),
+ ),
+ onError: (context, reDownload) => Center(
+   child: IconButton(
+     onPressed: reDownload,
+     icon: const Icon(Icons.download),
+   ),
+ ),
+ onImage: (context, memoryImage) => Container(
+   decoration: BoxDecoration(
+     borderRadius: BorderRadius.circular(20),
+     image: DecorationImage(
+       image: memoryImage,
+       fit: BoxFit.cover,
+     ),
+   ),
+ ),
+);
 ```
 
 ## How it works
 
 Stores and retrieves files using [dart:io](https://api.flutter.dev/flutter/dart-io/dart-io-library.html).
 
-Disposing and change image state using [flutter_riverpod](https://pub.dev/packages/flutter_riverpod) with [state_notifier](https://pub.dev/packages/state_notifier).
+Disposing and changing image state using [flutter_riverpod](https://pub.dev/packages/flutter_riverpod) with [state_notifier](https://pub.dev/packages/state_notifier).
 
-Using [dio](https://pub.dev/packages/dio) instead of [http](https://pub.dev/packages/http) To be able to cancel the download of the image if it's disposed during download.
+Using [http](https://pub.dev/packages/http) to download images from the internet.
 
 ### Example app
 

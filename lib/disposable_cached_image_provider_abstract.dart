@@ -3,17 +3,13 @@ part of disposable_cached_images;
 abstract class DisposableCachedImageProviderAbstract
     extends StateNotifier<_ImageProviderState> {
   final Reader read;
-  final String imageUrl;
-  final CancelToken cancelToken;
+  final String image;
   final void Function(MemoryImage? memoryImage) onMemoryImage;
   bool hasError = false;
 
-  static final dio = Dio();
-
   DisposableCachedImageProviderAbstract({
     required final this.read,
-    required final this.imageUrl,
-    required final this.cancelToken,
+    required final this.image,
     required final this.onMemoryImage,
   })  : assert(
           _scaffoldMessengerKey.currentWidget != null,
@@ -23,79 +19,41 @@ abstract class DisposableCachedImageProviderAbstract
     getImage();
   }
 
-  Future<void> getImage() async {
-    final key = imageUrl.key;
+  Future<void> getImage();
 
-    MemoryImage? imageProvider;
+  void onImageError(final MemoryImage? imageProvider) {
+    hasError = true;
+    onMemoryImage(imageProvider);
 
-    hasError = false;
-    state = state.loading();
+    if (mounted) state = state.notLoading(hasError, null);
 
-    final bytes = await read(_imageDataBaseProvider).getBytes(key);
+    imageProvider?.evict();
+  }
 
-    if (bytes != null) {
-      imageProvider = MemoryImage(bytes);
+  Future<void> handelImageBytes(
+    final MemoryImage memoryImage, {
+    final Uint8List? saveBytes,
+  }) async {
+    onMemoryImage(memoryImage);
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      hasError = await _preCache(imageProvider);
+    hasError = await preCache(memoryImage);
 
-      if (!hasError) imageProvider.evict();
-
-      onMemoryImage(imageProvider);
-
-      if (mounted) {
-        state = state.notLoading(hasError, imageProvider);
-      } else {
-        imageProvider.evict();
-      }
-
-      return;
-    }
-
-    try {
-      final response = await dio.get<Uint8List>(
-        imageUrl,
-        cancelToken: cancelToken,
-        options: Options(responseType: ResponseType.bytes),
-      );
-
-      final Uint8List bytes = response.data!;
-
-      imageProvider = MemoryImage(bytes);
-
-      if (!mounted) return;
-
-      hasError = await _preCache(imageProvider);
-
-      if (!hasError) {
-        read(_imageDataBaseProvider).addNew(key: key, bytes: bytes);
-      } else {
-        imageProvider.evict();
-      }
-
-      onMemoryImage(imageProvider);
-    } catch (e) {
-      hasError = true;
-      onMemoryImage(imageProvider);
-
-      if (mounted) state = state.notLoading(hasError, null);
-
-      imageProvider?.evict();
-
-      return;
+    if (hasError) {
+      memoryImage.evict();
+    } else if (saveBytes != null) {
+      read(_imageDataBaseProvider).addNew(key: image.key, bytes: saveBytes);
     }
 
     if (mounted) {
-      state = state.notLoading(hasError, imageProvider);
+      state = state.notLoading(hasError, memoryImage);
     } else {
-      imageProvider.evict();
+      memoryImage.evict();
     }
-
-    onMemoryImage(imageProvider);
   }
 
-  static Future<bool> _preCache(final MemoryImage imageProvider) async {
+  static Future<bool> preCache(final MemoryImage imageProvider) async {
     bool hasError = false;
 
     await precacheImage(
