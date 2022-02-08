@@ -21,15 +21,25 @@ class ImageWidget extends StatelessWidget {
           ),
         ),
       ),
-      child: DisposableNetworkImage(
-        imageUrl: imageUrl,
+      child: DisposableCachedImageWidget(
+        image: imageUrl,
+        maxCacheHeight: 2000,
+        maxCacheWidth: 2000,
         onLoading: (context) => const Center(
           child: Icon(Icons.downloading),
         ),
-        onError: (context, reDownload) => Center(
-          child: IconButton(
-            onPressed: reDownload,
-            icon: const Icon(Icons.download),
+        onError: (context, error, reDownload) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(error.toString()),
+              const SizedBox(height: 10),
+              IconButton(
+                onPressed: reDownload,
+                icon: const Icon(Icons.download),
+              ),
+            ],
           ),
         ),
         onImage: (context, memoryImage) => Container(

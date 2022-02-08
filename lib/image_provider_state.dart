@@ -2,36 +2,36 @@ part of disposable_cached_images;
 
 class _ImageProviderState {
   final bool isLoading;
-  final bool hasError;
+  final Object? error;
   final MemoryImage? imageProvider;
 
   _ImageProviderState loading() {
     return const _ImageProviderState(
       true,
-      false,
+      null,
       null,
     );
   }
 
   _ImageProviderState notLoading(
-    final bool hasError,
-    final MemoryImage? imageProvider,
-  ) {
+    final MemoryImage? imageProvider, {
+    final Object? error,
+  }) {
     return _ImageProviderState(
       false,
-      hasError,
       imageProvider,
+      error,
     );
   }
 
   factory _ImageProviderState.init() {
-    return const _ImageProviderState(false, false, null);
+    return const _ImageProviderState(false, null, null);
   }
 
   const _ImageProviderState(
     final this.isLoading,
-    final this.hasError,
     final this.imageProvider,
+    this.error,
   );
 
   @override
@@ -40,11 +40,11 @@ class _ImageProviderState {
 
     return other is _ImageProviderState &&
         other.isLoading == isLoading &&
-        other.hasError == hasError &&
+        other.error == error &&
         other.imageProvider == imageProvider;
   }
 
   @override
   int get hashCode =>
-      isLoading.hashCode ^ hasError.hashCode ^ imageProvider.hashCode;
+      isLoading.hashCode ^ error.hashCode ^ imageProvider.hashCode;
 }

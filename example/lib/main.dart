@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import './image_widgets.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runAppWithDisposableCachedImage(
     const MyApp(),
     scaffoldMessengerKey: scaffoldMessengerKey,
@@ -59,6 +61,6 @@ class Home extends StatelessWidget {
 
   static final images = List.generate(
     500,
-    (final i) => 'https://picsum.photos/id/$i/2000/3000',
+    (final i) => 'https://picsum.photos/id/$i/200/300',
   );
 }

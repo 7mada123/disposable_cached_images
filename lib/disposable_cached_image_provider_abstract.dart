@@ -5,7 +5,6 @@ abstract class DisposableCachedImageProviderAbstract
   final Reader read;
   final String image;
   final void Function(MemoryImage? memoryImage) onMemoryImage;
-  bool hasError = false;
 
   DisposableCachedImageProviderAbstract({
     required final this.read,
@@ -21,51 +20,90 @@ abstract class DisposableCachedImageProviderAbstract
 
   Future<void> getImage();
 
-  void onImageError(final MemoryImage? imageProvider) {
-    hasError = true;
-    onMemoryImage(imageProvider);
-
-    if (mounted) state = state.notLoading(hasError, null);
-
-    imageProvider?.evict();
+  void onImageError(final Object e) {
+    if (mounted) state = state.notLoading(null, error: e);
   }
 
   Future<void> handelImageBytes(
     final MemoryImage memoryImage, {
     final Uint8List? saveBytes,
   }) async {
-    onMemoryImage(memoryImage);
+    try {
+      onMemoryImage(memoryImage);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    hasError = await preCache(memoryImage);
+      await preCache(memoryImage);
 
-    if (hasError) {
-      memoryImage.evict();
-    } else if (saveBytes != null) {
-      read(_imageDataBaseProvider).addNew(key: image.key, bytes: saveBytes);
-    }
+      if (saveBytes != null) {
+        read(_imageDataBaseProvider).addNew(key: image.key, bytes: saveBytes);
+      }
 
-    if (mounted) {
-      state = state.notLoading(hasError, memoryImage);
-    } else {
+      if (mounted) {
+        state = state.notLoading(
+          memoryImage,
+        );
+      } else {
+        memoryImage.evict();
+      }
+    } catch (e) {
+      onImageError(e);
+
       memoryImage.evict();
     }
   }
 
-  static Future<bool> preCache(final MemoryImage imageProvider) async {
-    bool hasError = false;
+  Future<Uint8List> resizeBytes(
+    Uint8List bytes, {
+    final int? targetHeight,
+    final int? targetWidth,
+  }) async {
+    final image = await decodeImageFromList(bytes);
+
+    final codec = await instantiateImageCodec(
+      bytes,
+      targetHeight: _getTargetSize(image.height, targetHeight),
+      targetWidth: _getTargetSize(image.width, targetWidth),
+    );
+
+    image.dispose();
+
+    final frameInfo = await codec.getNextFrame();
+
+    codec.dispose();
+
+    final targetUiImage = frameInfo.image;
+
+    final rezizedByteData = await targetUiImage.toByteData(
+      format: ImageByteFormat.png,
+    );
+
+    targetUiImage.dispose();
+
+    return rezizedByteData!.buffer.asUint8List();
+  }
+
+  int? _getTargetSize(final int imageSize, final int? targetSize) {
+    if (targetSize != null && imageSize > targetSize) {
+      return targetSize;
+    } else {
+      return null;
+    }
+  }
+
+  static Future<void> preCache(final MemoryImage imageProvider) async {
+    Object? error;
 
     await precacheImage(
       imageProvider,
       _scaffoldMessengerKey.currentContext!,
       onError: (final exception, final stackTrace) {
-        hasError = true;
         imageProvider.evict();
+        error = exception;
       },
     );
 
-    return hasError;
+    if (error != null) throw error!;
   }
 }
 

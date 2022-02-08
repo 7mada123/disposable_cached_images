@@ -54,13 +54,28 @@ class _ImageDataBase {
 
     if (!isContain) return null;
 
-    final imageBytesFile = File(cachePath + key);
-    return imageBytesFile.readAsBytes();
+    try {
+      final imageBytesFile = File(cachePath + key);
+      return imageBytesFile.readAsBytes();
+    } catch (e) {
+      throw Exception(
+        """Exception has occurred. Unable to load image from cache
+        Error : ${e.toString()}""",
+      );
+    }
   }
 
   Future<Uint8List> getBytesFormAssets(final String imagePath) async {
-    final imageBytesFile = File(imagePath);
-    return imageBytesFile.readAsBytes();
+    try {
+      final imageBytesFile = File(imagePath);
+      return imageBytesFile.readAsBytes();
+    } catch (e) {
+      throw Exception(
+        """Exception has occurred. Unable to load asset image
+        path : $imagePath
+        Error : ${e.toString()}""",
+      );
+    }
   }
 
   static Future<void> _clearCache() async {

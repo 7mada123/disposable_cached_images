@@ -43,11 +43,17 @@ Add `scaffoldMessengerKey` to the `MaterialApp`
 > you can read more about `scaffoldMessengerKey` on [docs.flutter](https://docs.flutter.dev/release/breaking-changes/scaffold-messenger)
 
 ```dart
-MaterialApp(
-home: const Home(),
-scaffoldMessengerKey: scaffoldMessengerKey,
-);
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
 
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: const Home(),
+      scaffoldMessengerKey: scaffoldMessengerKey,
+    );
+  }
+}
 
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 ```
@@ -71,27 +77,29 @@ Now your app is ready to use the package.
 
 ### Displaying images
 
-Use `DisposableNetworkImage` to display images form internet.
+Use `DisposableCachedImageWidget` to display images form internet.
 
 ```dart
-DisposableNetworkImage(
-imageUrl: 'https://picsum.photos/id/23/200/300',
+DisposableCachedImageWidget(
+image: 'https://picsum.photos/id/23/200/300',
 );
 ```
 
-Use `DisposableAssetsImage` to display images form assets.
+You can also display images form assets by passing the image path.
 
 ```dart
-DisposableAssetsImage(
-imagePath: 'images/a_dot_burr.jpeg',
+DisposableCachedImageWidget(
+image: 'images/a_dot_burr.jpeg',
 );
 ```
+
+> The image url must start with http and if it doesn't start with http the package will assume the image is an asset.
 
 You can display your custom widgets while the image is loading, has an error and when it is ready as shown below
 
 ```dart
-DisposableNetworkImage(
- imageUrl: imageUrl,
+DisposableCachedImageWidget(
+ image: imageUrl,
  onLoading: (context) => const Center(
    child: Icon(Icons.downloading),
  ),
@@ -110,6 +118,18 @@ DisposableNetworkImage(
      ),
    ),
  ),
+);
+```
+
+You can Provide a maximum height and width values for image by passing the values to maxCacheHeight and maxCacheWidth arguments, If the actual height or width of the image is less than the provided value, the provided value will be ignored.
+
+The image will be resized before it's displayed in the UI and saved to the device storage.
+
+```dart
+DisposableCachedImageWidget(
+ image: imageUrl,
+ maxCacheHeight: 300,
+ maxCacheWidth: 300,
 );
 ```
 
