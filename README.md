@@ -121,7 +121,7 @@ DisposableCachedImageWidget(
 );
 ```
 
-You can Provide a maximum height and width values for image by passing the values to maxCacheHeight and maxCacheWidth arguments, If the actual height or width of the image is less than the provided value, the provided value will be ignored.
+You can Provide a maximum height and width values for image by passing the values to `maxCacheHeight` and `maxCacheWidth` arguments, If the actual height or width of the image is less than the provided value, the provided value will be ignored.
 
 The image will be resized before it's displayed in the UI and saved to the device storage.
 
