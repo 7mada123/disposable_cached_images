@@ -1,6 +1,6 @@
 name: disposable_cached_images
 description: Flutter package for displaying images from the Internet and keeping them in the cache directory.
-version: 0.0.5
+version: 0.0.6
 homepage: https://github.com/7mada123/disposable_cached_images
 
 environment:

@@ -5,11 +5,11 @@ final _imageDataBaseProvider = Provider.autoDispose<_ImageDataBase>(
 );
 
 class _ImageDataBase {
-  static const keysFile = "cache_keys.txt";
+  static const keysFile = "cache_keys.json";
 
   static late final String cachePath;
 
-  static late final List<String> fileContent;
+  static late final Map<String, String> fileContent;
 
   final String _path;
 
@@ -21,10 +21,10 @@ class _ImageDataBase {
     final fileExists = jsonFile.existsSync();
 
     if (fileExists) {
-      fileContent = jsonFile.readAsStringSync().split(',');
+      fileContent = Map.from(json.decode(jsonFile.readAsStringSync()));
     } else {
       jsonFile.createSync(recursive: true);
-      fileContent = [];
+      fileContent = {};
     }
   }
 
@@ -38,19 +38,19 @@ class _ImageDataBase {
 
     await imageBytesFile.writeAsBytes(bytes);
 
-    final isContain = await isContainKeyCompute(key);
+    final isContain = isContainKey(key);
 
     if (!isContain) {
-      fileContent.add(key);
+      fileContent.putIfAbsent(key, () => '');
 
       final imageFile = File(cachePath + keysFile);
 
-      imageFile.writeAsString(fileContent.join(','));
+      imageFile.writeAsString(json.encode(fileContent));
     }
   }
 
   Future<Uint8List?> getBytes(final String key) async {
-    final isContain = await isContainKeyCompute(key);
+    final isContain = isContainKey(key);
 
     if (!isContain) return null;
 
@@ -86,36 +86,7 @@ class _ImageDataBase {
     fileContent.clear();
   }
 
-  static Future<bool> isContainKeyCompute(final String key) async {
-    return compute<_KeyCheckClass, bool>(
-      isContainKey,
-      _KeyCheckClass(keys: fileContent, key: key),
-    );
+  static bool isContainKey(final String key) {
+    return fileContent[key] != null;
   }
-
-  static bool isContainKey(final _KeyCheckClass argument) {
-    return argument.keys.contains(argument.key);
-  }
-}
-
-class _KeyCheckClass {
-  final List<String> keys;
-  final String key;
-
-  const _KeyCheckClass({
-    required final this.keys,
-    required final this.key,
-  });
-
-  @override
-  bool operator ==(final Object other) {
-    if (identical(this, other)) return true;
-
-    return other is _KeyCheckClass &&
-        listEquals(other.keys, keys) &&
-        other.key == key;
-  }
-
-  @override
-  int get hashCode => keys.hashCode ^ key.hashCode;
 }

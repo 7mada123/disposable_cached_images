@@ -29,18 +29,18 @@ final _imageProvider = StateNotifierProvider.autoDispose.family<
 });
 
 class _CachedImageClass extends DisposableCachedImageProviderAbstract {
-  final http.Client httpClient;
   final ImageProviderArguments providerArguments;
 
   _CachedImageClass(
     final Reader read,
     final this.providerArguments,
-    final this.httpClient,
+    final http.Client httpClient,
     final void Function(MemoryImage? memoryImage) onMemoryImage,
   ) : super(
           read: read,
           image: providerArguments.image,
           onMemoryImage: onMemoryImage,
+          httpClient: httpClient,
         );
 
   @override
@@ -48,36 +48,28 @@ class _CachedImageClass extends DisposableCachedImageProviderAbstract {
     try {
       final key = image.key;
 
-      MemoryImage? imageProvider;
-
-      state = state.loading();
-
       if (!image.startsWith('http')) {
-        httpClient.close();
-
         final bytes = await read(_imageDataBaseProvider).getBytesFormAssets(
           image,
         );
 
         imageProvider = MemoryImage(bytes);
-        handelImageBytes(imageProvider);
+        handelImageBytes();
+
+        return;
       }
 
       final bytes = await read(_imageDataBaseProvider).getBytes(key);
 
       if (bytes != null) {
-        httpClient.close();
-
         imageProvider = MemoryImage(bytes);
 
-        handelImageBytes(imageProvider, saveBytes: bytes);
+        handelImageBytes();
 
         return;
       }
 
       final response = await httpClient.get(Uri.parse(image));
-
-      httpClient.close();
 
       if (providerArguments.targetHeight != null ||
           providerArguments.targetWidth != null) {
@@ -89,14 +81,24 @@ class _CachedImageClass extends DisposableCachedImageProviderAbstract {
 
         imageProvider = MemoryImage(resizedBytes);
 
-        handelImageBytes(imageProvider, saveBytes: resizedBytes);
+        read(_imageDataBaseProvider).addNew(
+          key: image.key,
+          bytes: resizedBytes,
+        );
+
+        await handelImageBytes();
 
         return;
       }
 
       imageProvider = MemoryImage(response.bodyBytes);
 
-      await handelImageBytes(imageProvider, saveBytes: response.bodyBytes);
+      read(_imageDataBaseProvider).addNew(
+        key: image.key,
+        bytes: response.bodyBytes,
+      );
+
+      await handelImageBytes();
     } catch (e) {
       httpClient.close();
       onImageError(e);

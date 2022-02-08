@@ -4,19 +4,31 @@ abstract class DisposableCachedImageProviderAbstract
     extends StateNotifier<_ImageProviderState> {
   final Reader read;
   final String image;
+  final http.Client httpClient;
   final void Function(MemoryImage? memoryImage) onMemoryImage;
 
   DisposableCachedImageProviderAbstract({
     required final this.read,
     required final this.image,
+    required final this.httpClient,
     required final this.onMemoryImage,
   })  : assert(
           _scaffoldMessengerKey.currentWidget != null,
           "scaffoldMessengerKey isn't attached to the MaterialApp",
         ),
         super(_ImageProviderState.init()) {
-    getImage();
+    state = state.loading();
+
+    imageProvider = read(_usedImageProvider).getImageProvider(image.key);
+
+    if (imageProvider != null) {
+      handelImageBytes();
+    } else {
+      getImage();
+    }
   }
+
+  MemoryImage? imageProvider;
 
   Future<void> getImage();
 
@@ -24,32 +36,29 @@ abstract class DisposableCachedImageProviderAbstract
     if (mounted) state = state.notLoading(null, error: e);
   }
 
-  Future<void> handelImageBytes(
-    final MemoryImage memoryImage, {
-    final Uint8List? saveBytes,
-  }) async {
+  Future<void> handelImageBytes() async {
+    httpClient.close();
+
+    read(_usedImageProvider).add(image.key, imageProvider!);
+
     try {
-      onMemoryImage(memoryImage);
+      onMemoryImage(imageProvider!);
 
       if (!mounted) return;
 
-      await preCache(memoryImage);
-
-      if (saveBytes != null) {
-        read(_imageDataBaseProvider).addNew(key: image.key, bytes: saveBytes);
-      }
+      await preCache(imageProvider!);
 
       if (mounted) {
         state = state.notLoading(
-          memoryImage,
+          imageProvider!,
         );
       } else {
-        memoryImage.evict();
+        imageProvider!.evict();
       }
     } catch (e) {
       onImageError(e);
 
-      memoryImage.evict();
+      imageProvider!.evict();
     }
   }
 

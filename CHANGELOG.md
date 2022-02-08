@@ -1,8 +1,9 @@
-## 0.0.3
+## 0.0.6
 
-Support assets images.
+Added new provider to keep track of the alrady yeild `MemoryImage`
+This will help reduce the time required to display the previously viewed image.
 
-Remove Dio in favor of http.
+Using a `map` instead of a `list` of cached images to find keys faster
 
 ## 0.0.5
 
@@ -15,3 +16,11 @@ Update documentation and example
 Integrate the asset image with the network image to use one Widget for both
 
 Improved error handling
+
+
+## 0.0.3
+
+Support assets images.
+
+Remove Dio in favor of http.
+

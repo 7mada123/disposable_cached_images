@@ -23,8 +23,6 @@ class ImageWidget extends StatelessWidget {
       ),
       child: DisposableCachedImageWidget(
         image: imageUrl,
-        maxCacheHeight: 2000,
-        maxCacheWidth: 2000,
         onLoading: (context) => const Center(
           child: Icon(Icons.downloading),
         ),
