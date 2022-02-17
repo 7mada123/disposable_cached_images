@@ -50,13 +50,10 @@ class _ImageDataBase {
   }
 
   Future<Uint8List?> getBytes(final String key) async {
-    final isContain = isContainKey(key);
-
-    if (!isContain) return null;
+    if (!isContainKey(key)) return null;
 
     try {
-      final imageBytesFile = File(cachePath + key);
-      return imageBytesFile.readAsBytes();
+      return File(cachePath + key).readAsBytes();
     } catch (e) {
       throw Exception(
         """Exception has occurred. Unable to load image from cache
@@ -67,8 +64,7 @@ class _ImageDataBase {
 
   Future<Uint8List> getBytesFormAssets(final String imagePath) async {
     try {
-      final imageBytesFile = File(imagePath);
-      return imageBytesFile.readAsBytes();
+      return File(imagePath).readAsBytes();
     } catch (e) {
       throw Exception(
         """Exception has occurred. Unable to load asset image

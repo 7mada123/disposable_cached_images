@@ -7,7 +7,12 @@ class DisposableCachedImageWidget extends ConsumerStatefulWidget {
   ///  The image will be resized before it is displayed in the UI and saved to the device storage
   final int? maxCacheWidth, maxCacheHeight;
 
+  /// How to inscribe the image into the space allocated during layout.
+  ///
+  /// The default varies based on the other fields. See the discussion at
+  /// [paintImage].
   final BoxFit? fit;
+
   final Duration fadeDuration;
 
   /// A widget to display when loading the image,
@@ -24,10 +29,14 @@ class DisposableCachedImageWidget extends ConsumerStatefulWidget {
   /// note : image url should start with http
   final String image;
 
+  /// Determine the type of image, whether it is from the Internet or assets
+  final ImageType imageType;
+
   const DisposableCachedImageWidget({
     required this.image,
     this.maxCacheWidth,
     this.maxCacheHeight,
+    this.imageType = ImageType.network,
     this.fit,
     this.onImage,
     this.onLoading,
@@ -48,6 +57,7 @@ class _DisposableCachedImageWidgetState
     image: widget.image,
     targetHeight: widget.maxCacheHeight,
     targetWidth: widget.maxCacheWidth,
+    imageType: widget.imageType,
   ));
 
   @override

@@ -13,16 +13,15 @@ Future<void> runAppWithDisposableCachedImage(
   List<Override> overrides = const [],
   List<ProviderObserver>? observers,
 }) async {
-  final dir = await getTemporaryDirectory();
+  final path = kIsWeb ? '' : (await getTemporaryDirectory()).path;
 
   _scaffoldMessengerKey = scaffoldMessengerKey;
-
-  final imageCache = _ImageDataBase(dir.path);
 
   runApp(
     ProviderScope(
       overrides: [
-        _imageDataBaseProvider.overrideWithValue(imageCache),
+        if (!kIsWeb)
+          _imageDataBaseProvider.overrideWithValue(_ImageDataBase(path)),
         ...overrides,
       ],
       observers: observers,
@@ -39,3 +38,12 @@ Future<void> clearCache() {
 }
 
 late final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey;
+
+/// Determine the type of image, whether it is from the Internet or assets
+enum ImageType {
+  /// Get the image from the provided assets path
+  assets,
+
+  /// Get the image from the provided url
+  network,
+}

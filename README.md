@@ -90,10 +90,9 @@ You can also display images form assets by passing the image path.
 ```dart
 DisposableCachedImageWidget(
 image: 'images/a_dot_burr.jpeg',
+imageType: ImageType.assets,
 );
 ```
-
-> The image url must start with http and if it doesn't start with http the package will assume the image is an asset.
 
 You can display your custom widgets while the image is loading, has an error and when it is ready as shown below
 
@@ -149,6 +148,6 @@ The [example](https://github.com/7mada123/disposable_cached_images/tree/main/exa
 
 Improve package documentation
 
-Web support
+Web caching and assets
 
 Further improvements

@@ -1,13 +1,21 @@
+## 0.0.7
+
+Added web support
+> web image caching and assets are still not supported
+
+Added `ImageType` to determine if an image is from the Internet or an asset
+
+Update documentation
+
 ## 0.0.6
 
-Added new provider to keep track of the alrady yeild `MemoryImage`
-This will help reduce the time required to display the previously viewed image.
+A new provider has been added to keep track of the `MemoryImage` that has already been used and this will help reduce the time required to display the previously viewed image.
 
 Using a `map` instead of a `list` of cached images to find keys faster
 
 ## 0.0.5
 
-Add maxCacheWidth and maxCacheHeight to resize images
+Add `maxCacheWidth` and `maxCacheHeight` to resize images
 
 Update documentation and example
 
@@ -17,10 +25,8 @@ Integrate the asset image with the network image to use one Widget for both
 
 Improved error handling
 
-
 ## 0.0.3
 
 Support assets images.
 
 Remove Dio in favor of http.
-

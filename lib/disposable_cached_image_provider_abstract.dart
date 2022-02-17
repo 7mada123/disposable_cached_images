@@ -22,7 +22,7 @@ abstract class DisposableCachedImageProviderAbstract
     imageProvider = read(_usedImageProvider).getImageProvider(image.key);
 
     if (imageProvider != null) {
-      handelImageBytes();
+      handelImageProvider();
     } else {
       getImage();
     }
@@ -36,7 +36,7 @@ abstract class DisposableCachedImageProviderAbstract
     if (mounted) state = state.notLoading(null, error: e);
   }
 
-  Future<void> handelImageBytes() async {
+  Future<void> handelImageProvider() async {
     httpClient.close();
 
     read(_usedImageProvider).add(image.key, imageProvider!);

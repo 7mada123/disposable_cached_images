@@ -36,7 +36,12 @@ class _CachedImageClass extends DisposableCachedImageProviderAbstract {
     final this.providerArguments,
     final http.Client httpClient,
     final void Function(MemoryImage? memoryImage) onMemoryImage,
-  ) : super(
+  )   : assert(
+          !kIsWeb ||
+              (kIsWeb && providerArguments.imageType != ImageType.assets),
+          "asste image not suported on web",
+        ),
+        super(
           read: read,
           image: providerArguments.image,
           onMemoryImage: onMemoryImage,
@@ -46,29 +51,41 @@ class _CachedImageClass extends DisposableCachedImageProviderAbstract {
   @override
   Future<void> getImage() async {
     try {
-      final key = image.key;
+      if (kIsWeb) {
+        await handelNetworkImage();
+        return;
+      }
 
-      if (!image.startsWith('http')) {
+      if (providerArguments.imageType == ImageType.assets) {
         final bytes = await read(_imageDataBaseProvider).getBytesFormAssets(
           image,
         );
 
         imageProvider = MemoryImage(bytes);
-        handelImageBytes();
+        handelImageProvider();
 
         return;
       }
 
-      final bytes = await read(_imageDataBaseProvider).getBytes(key);
+      final bytes = await read(_imageDataBaseProvider).getBytes(image.key);
 
       if (bytes != null) {
         imageProvider = MemoryImage(bytes);
 
-        handelImageBytes();
+        handelImageProvider();
 
         return;
       }
 
+      handelNetworkImage();
+    } catch (e) {
+      httpClient.close();
+      onImageError(e);
+    }
+  }
+
+  Future<void> handelNetworkImage() async {
+    try {
       final response = await httpClient.get(Uri.parse(image));
 
       if (providerArguments.targetHeight != null ||
@@ -81,24 +98,28 @@ class _CachedImageClass extends DisposableCachedImageProviderAbstract {
 
         imageProvider = MemoryImage(resizedBytes);
 
-        read(_imageDataBaseProvider).addNew(
-          key: image.key,
-          bytes: resizedBytes,
-        );
+        if (!kIsWeb) {
+          read(_imageDataBaseProvider).addNew(
+            key: image.key,
+            bytes: resizedBytes,
+          );
+        }
 
-        await handelImageBytes();
+        await handelImageProvider();
 
         return;
       }
 
       imageProvider = MemoryImage(response.bodyBytes);
 
-      read(_imageDataBaseProvider).addNew(
-        key: image.key,
-        bytes: response.bodyBytes,
-      );
+      if (!kIsWeb) {
+        read(_imageDataBaseProvider).addNew(
+          key: image.key,
+          bytes: response.bodyBytes,
+        );
+      }
 
-      await handelImageBytes();
+      await handelImageProvider();
     } catch (e) {
       httpClient.close();
       onImageError(e);
@@ -108,12 +129,14 @@ class _CachedImageClass extends DisposableCachedImageProviderAbstract {
 
 class ImageProviderArguments {
   final String image;
+  final ImageType imageType;
   final int? targetWidth, targetHeight;
 
   const ImageProviderArguments({
     required final this.image,
     final this.targetWidth,
     final this.targetHeight,
+    final this.imageType = ImageType.network,
   });
 
   @override
