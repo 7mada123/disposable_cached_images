@@ -1,13 +1,13 @@
 part of disposable_cached_images;
 
-abstract class DisposableCachedImageProviderAbstract
+abstract class ImageCacheProviderInterface
     extends StateNotifier<_ImageProviderState> {
   final Reader read;
   final String image;
   final http.Client httpClient;
   final void Function(MemoryImage? memoryImage) onMemoryImage;
 
-  DisposableCachedImageProviderAbstract({
+  ImageCacheProviderInterface({
     required final this.read,
     required final this.image,
     required final this.httpClient,

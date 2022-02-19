@@ -1,6 +1,15 @@
-## 0.0.7
+## 0.0.8
 
 Added web support
+
+> Caching images with local storage
+
+Update dependencies
+
+## 0.0.7
+
+Added initial web support
+
 > web image caching and assets are still not supported
 
 Added `ImageType` to determine if an image is from the Internet or an asset

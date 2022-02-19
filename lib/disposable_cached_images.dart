@@ -1,20 +1,18 @@
 library disposable_cached_images;
 
-import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
 
-part './disposable_cached_image_provider_abstract.dart';
+import './cache/interface.dart';
+
 part './disposable_image_widget.dart';
 part './globals.dart';
-part './image_data_base.dart';
-part './image_provider.dart';
-part './image_provider_state.dart';
-part './used_image_provider.dart';
+part './image_provider/image_provider.dart';
+part './image_provider/image_provider_arguments.dart';
+part './image_provider/image_provider_state.dart';
+part './image_provider/interface.dart';
+part './image_provider/used_image_provider.dart';

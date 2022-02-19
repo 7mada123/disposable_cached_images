@@ -1,3 +1,4 @@
+import 'package:disposable_cached_images/cache/interface.dart';
 import 'package:disposable_cached_images/disposable_cached_images.dart';
 import 'package:flutter/material.dart';
 
@@ -35,7 +36,7 @@ class Home extends StatelessWidget {
       appBar: AppBar(actions: [
         IconButton(
           onPressed: () async {
-            await clearCache();
+            await ImageCacheManger.instance.clearCache();
 
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Cache cleared!')),

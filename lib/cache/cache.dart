@@ -1,20 +1,27 @@
-part of disposable_cached_images;
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
-final _imageDataBaseProvider = Provider.autoDispose<_ImageDataBase>(
-  (final ref) => throw UnimplementedError(),
-);
+import 'package:path_provider/path_provider.dart';
 
-class _ImageDataBase {
+import './interface.dart';
+
+ImageCacheManger getInstance() => const _ImageDataBase();
+
+class _ImageDataBase extends ImageCacheManger {
   static const keysFile = "cache_keys.json";
 
   static late final String cachePath;
 
   static late final Map<String, String> fileContent;
 
-  final String _path;
+  const _ImageDataBase();
 
-  _ImageDataBase(this._path) {
-    cachePath = '$_path/image_cache/';
+  @override
+  Future<void> init() async {
+    final path = (await getTemporaryDirectory()).path;
+
+    cachePath = '$path/image_cache/';
 
     final jsonFile = File(cachePath + keysFile);
 
@@ -28,6 +35,7 @@ class _ImageDataBase {
     }
   }
 
+  @override
   Future<void> addNew({
     required final String key,
     required final Uint8List bytes,
@@ -49,6 +57,7 @@ class _ImageDataBase {
     }
   }
 
+  @override
   Future<Uint8List?> getBytes(final String key) async {
     if (!isContainKey(key)) return null;
 
@@ -62,6 +71,7 @@ class _ImageDataBase {
     }
   }
 
+  @override
   Future<Uint8List> getBytesFormAssets(final String imagePath) async {
     try {
       return File(imagePath).readAsBytes();
@@ -74,7 +84,8 @@ class _ImageDataBase {
     }
   }
 
-  static Future<void> _clearCache() async {
+  @override
+  Future<void> clearCache() async {
     await File(cachePath).delete(recursive: true);
 
     await File(cachePath + keysFile).create(recursive: true);

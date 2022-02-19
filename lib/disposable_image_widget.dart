@@ -101,4 +101,4 @@ typedef OnImage = Widget Function(
 );
 
 typedef DisposableImageProvider = AutoDisposeStateNotifierProvider<
-    DisposableCachedImageProviderAbstract, _ImageProviderState>;
+    ImageCacheProviderInterface, _ImageProviderState>;

@@ -13,28 +13,23 @@ Future<void> runAppWithDisposableCachedImage(
   List<Override> overrides = const [],
   List<ProviderObserver>? observers,
 }) async {
-  final path = kIsWeb ? '' : (await getTemporaryDirectory()).path;
-
   _scaffoldMessengerKey = scaffoldMessengerKey;
+
+  final cache = ImageCacheManger.instance;
+
+  await cache.init();
 
   runApp(
     ProviderScope(
       overrides: [
-        if (!kIsWeb)
-          _imageDataBaseProvider.overrideWithValue(_ImageDataBase(path)),
+        // if (!kIsWeb)
+        imageDataBaseProvider.overrideWithValue(cache),
         ...overrides,
       ],
       observers: observers,
       child: app,
     ),
   );
-}
-
-/// {@template clearCache}
-/// Clear [DisposableCachedImage] storage cache.
-/// {@endtemplate}
-Future<void> clearCache() {
-  return _ImageDataBase._clearCache();
 }
 
 late final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey;

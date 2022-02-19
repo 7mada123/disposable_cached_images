@@ -134,7 +134,7 @@ DisposableCachedImageWidget(
 
 ## How it works
 
-Stores and retrieves files using [dart:io](https://api.flutter.dev/flutter/dart-io/dart-io-library.html).
+Stores and retrieves files using [localStorage](https://api.flutter.dev/flutter/dart-html/Window/localStorage.html) on web and [dart:io](https://api.flutter.dev/flutter/dart-io/dart-io-library.html) on other platforms.
 
 Disposing and changing image state using [flutter_riverpod](https://pub.dev/packages/flutter_riverpod) with [state_notifier](https://pub.dev/packages/state_notifier).
 
@@ -147,7 +147,5 @@ The [example](https://github.com/7mada123/disposable_cached_images/tree/main/exa
 ### Roadmap
 
 Improve package documentation
-
-Web caching and assets
 
 Further improvements
