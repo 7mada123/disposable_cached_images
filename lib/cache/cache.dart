@@ -28,7 +28,12 @@ class _ImageDataBase extends ImageCacheManger {
     final fileExists = jsonFile.existsSync();
 
     if (fileExists) {
-      fileContent = Map.from(json.decode(jsonFile.readAsStringSync()));
+      final fileStr = jsonFile.readAsStringSync();
+      if (fileStr.isNotEmpty) {
+        fileContent = Map.from(json.decode(fileStr));
+      } else {
+        fileContent = {};
+      }
     } else {
       jsonFile.createSync(recursive: true);
       fileContent = {};

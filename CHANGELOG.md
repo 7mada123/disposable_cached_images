@@ -6,6 +6,8 @@ Added web support
 
 Update dependencies
 
+Fix cache file initialization issue
+
 ## 0.0.7
 
 Added initial web support
