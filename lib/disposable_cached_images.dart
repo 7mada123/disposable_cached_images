@@ -1,13 +1,11 @@
 library disposable_cached_images;
 
-import 'dart:typed_data';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
 import './cache/interface.dart';
+import './image_info_data/image_info_data.dart';
 
 part './disposable_image_widget.dart';
 part './globals.dart';

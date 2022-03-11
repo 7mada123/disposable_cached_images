@@ -7,13 +7,13 @@ final _usedImageProvider = Provider<_UsedImageProviders>((ref) {
 class _UsedImageProviders {
   const _UsedImageProviders();
 
-  static final Map<String, MemoryImage> usedImageProvidersList = {};
+  static final Map<String, ImageInfoData> usedImageProvidersList = {};
 
-  MemoryImage? getImageProvider(final String key) {
+  ImageInfoData? getImageInfo(final String key) {
     return usedImageProvidersList[key];
   }
 
-  void add(final String key, final MemoryImage memoryImage) {
-    usedImageProvidersList.putIfAbsent(key, () => memoryImage);
+  void add(final ImageInfoData imageInfo) {
+    usedImageProvidersList.putIfAbsent(imageInfo.key, () => imageInfo);
   }
 }

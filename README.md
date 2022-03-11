@@ -22,7 +22,7 @@ and the Flutter guide for
 
 -->
 
-A flutter package for displaying and releasing images from memory.
+A flutter package for downloading, caching, displaying and releasing images from memory.
 
 ## Features
 
@@ -60,7 +60,7 @@ final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 In the main method use `runAppWithDisposableCachedImage` instead of `runApp` and pass it the `scaffoldMessengerKey` to initialize the package
 
-> the `scaffoldMessengerKey.currentContext` is used to precache the image ahead of being request in the ui, [learn more about precacheImage](https://api.flutter.dev/flutter/widgets/precacheImage.html).
+> the `scaffoldMessengerKey.currentContext` is used to precache the image ahead of being request in the UI, [learn more about precacheImage](https://api.flutter.dev/flutter/widgets/precacheImage.html).
 
 ```dart
 void main() {
@@ -131,6 +131,27 @@ DisposableCachedImageWidget(
  maxCacheWidth: 300,
 );
 ```
+
+### Caching images on the web
+
+If you want to enable web caching, you must declare it in `runAppWithDisposableCachedImage` as shown below.
+
+```dart
+runAppWithDisposableCachedImage(
+  const MyApp(),
+  scaffoldMessengerKey: scaffoldMessengerKey,
+  // enable Web cache, default false
+  enableWebCache: true,
+);
+```
+
+> In both cases the images will be saved in memory as variables, and the web storage cache should not be enabled if your application uses many images
+
+### Display images with dynamic size
+
+The package saves the height and width of the image when the image is first downloaded, and this reduces layout jumps when an already cached image is loaded.
+
+For example providing a `maxCacheWidth` with the width of the `Widget` or the width of the device so that the height can be calculated according to the width otherwise you could end up with white space around the height of the image.
 
 ## How it works
 

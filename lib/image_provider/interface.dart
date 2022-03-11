@@ -16,98 +16,77 @@ abstract class ImageCacheProviderInterface
           _scaffoldMessengerKey.currentWidget != null,
           "scaffoldMessengerKey isn't attached to the MaterialApp",
         ),
-        super(_ImageProviderState.init()) {
-    state = state.loading();
+        super(const _ImageProviderState.init()) {
+    final usedImageInfo = read(_usedImageProvider).getImageInfo(image.key);
 
-    imageProvider = read(_usedImageProvider).getImageProvider(image.key);
+    if (usedImageInfo != null) {
+      imageInfo = usedImageInfo;
 
-    if (imageProvider != null) {
+      state = state.loading(usedImageInfo.height, usedImageInfo.width);
+
       handelImageProvider();
     } else {
+      final savedImageInfo = read(imageDataBaseProvider).getImageInfo(
+        image.key,
+      );
+
+      if (savedImageInfo == null) {
+        state = state.loading(null, null);
+        imageInfo = ImageInfoData.init(image.key);
+      } else {
+        state = state.loading(savedImageInfo.height, savedImageInfo.width);
+        imageInfo = savedImageInfo;
+      }
+
       getImage();
     }
   }
 
-  MemoryImage? imageProvider;
+  late ImageInfoData imageInfo;
 
   Future<void> getImage();
 
   void onImageError(final Object e) {
-    if (mounted) state = state.notLoading(null, error: e);
+    if (mounted) state = state.notLoading(error: e);
   }
 
   Future<void> handelImageProvider() async {
     httpClient.close();
 
-    read(_usedImageProvider).add(image.key, imageProvider!);
+    read(_usedImageProvider).add(imageInfo);
 
     try {
-      onMemoryImage(imageProvider!);
+      onMemoryImage(imageInfo.memoryImage!);
 
       if (!mounted) return;
 
-      await preCache(imageProvider!);
+      await preCache(imageInfo);
 
       if (mounted) {
-        state = state.notLoading(
-          imageProvider!,
-        );
+        state = state.notLoading(imageProvider: imageInfo.memoryImage);
       } else {
-        imageProvider!.evict();
+        imageInfo.memoryImage!.evict();
       }
     } catch (e) {
       onImageError(e);
 
-      imageProvider!.evict();
+      imageInfo.memoryImage!.evict();
     }
   }
 
-  Future<Uint8List> resizeBytes(
-    Uint8List bytes, {
-    final int? targetHeight,
-    final int? targetWidth,
-  }) async {
-    final image = await decodeImageFromList(bytes);
-
-    final codec = await instantiateImageCodec(
-      bytes,
-      targetHeight: _getTargetSize(image.height, targetHeight),
-      targetWidth: _getTargetSize(image.width, targetWidth),
-    );
-
-    image.dispose();
-
-    final frameInfo = await codec.getNextFrame();
-
-    codec.dispose();
-
-    final targetUiImage = frameInfo.image;
-
-    final rezizedByteData = await targetUiImage.toByteData(
-      format: ImageByteFormat.png,
-    );
-
-    targetUiImage.dispose();
-
-    return rezizedByteData!.buffer.asUint8List();
+  Future<void> addImageToCache() {
+    return read(imageDataBaseProvider).addNew(imageInfo);
   }
 
-  int? _getTargetSize(final int imageSize, final int? targetSize) {
-    if (targetSize != null && imageSize > targetSize) {
-      return targetSize;
-    } else {
-      return null;
-    }
-  }
-
-  static Future<void> preCache(final MemoryImage imageProvider) async {
+  static Future<void> preCache(final ImageInfoData imageInfo) async {
     Object? error;
 
     await precacheImage(
-      imageProvider,
+      imageInfo.memoryImage!,
       _scaffoldMessengerKey.currentContext!,
+      size: imageInfo.getSize(),
       onError: (final exception, final stackTrace) {
-        imageProvider.evict();
+        imageInfo.memoryImage!.evict();
         error = exception;
       },
     );

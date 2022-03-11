@@ -1,4 +1,5 @@
 import './interface.dart';
 
-ImageCacheManger getInstance() =>
-    throw UnsupportedError('Cannot create ImageCacheManger');
+ImageCacheManger getInstance() {
+  throw UnsupportedError('unsupported platform');
+}

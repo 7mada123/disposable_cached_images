@@ -52,39 +52,47 @@ class DisposableCachedImageWidget extends ConsumerStatefulWidget {
 
 class _DisposableCachedImageWidgetState
     extends ConsumerState<DisposableCachedImageWidget> {
-  late final DisposableImageProvider provider =
-      _imageProvider(ImageProviderArguments(
-    image: widget.image,
-    targetHeight: widget.maxCacheHeight,
-    targetWidth: widget.maxCacheWidth,
-    imageType: widget.imageType,
-  ));
+  late final DisposableImageProvider provider = _imageProvider(
+    ImageProviderArguments(
+      image: widget.image,
+      targetHeight: widget.maxCacheHeight,
+      targetWidth: widget.maxCacheWidth,
+      imageType: widget.imageType,
+    ),
+  );
 
   @override
   Widget build(final context) {
     final providerState = ref.watch(provider);
 
-    return AnimatedSwitcher(
-      duration: widget.fadeDuration,
+    return SizedBox(
       key: widget.key,
-      child: providerState.isLoading
-          ? widget.onLoading != null
-              ? widget.onLoading!(context)
-              : const SizedBox()
-          : providerState.error != null
-              ? widget.onError != null
-                  ? widget.onError!(
-                      context,
-                      providerState.error!,
-                      () => ref.refresh(provider.notifier),
-                    )
-                  : const SizedBox()
-              : widget.onImage != null
-                  ? widget.onImage!(context, providerState.imageProvider!)
-                  : Image.memory(
-                      providerState.imageProvider!.bytes,
-                      fit: widget.fit,
-                    ),
+      height: providerState.height,
+      width: providerState.width,
+      child: AnimatedSwitcher(
+        duration: widget.fadeDuration,
+        child: providerState.isLoading
+            ? widget.onLoading != null
+                ? widget.onLoading!(context)
+                : const SizedBox()
+            : providerState.error != null
+                ? widget.onError != null
+                    ? widget.onError!(
+                        context,
+                        providerState.error!,
+                        () => ref.refresh(provider.notifier),
+                      )
+                    : const SizedBox()
+                : widget.onImage != null
+                    ? widget.onImage!(
+                        context,
+                        providerState.imageProvider!,
+                      )
+                    : Image.memory(
+                        providerState.imageProvider!.bytes,
+                        fit: widget.fit,
+                      ),
+      ),
     );
   }
 }

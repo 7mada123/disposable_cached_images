@@ -1,3 +1,15 @@
+## 0.1.0
+
+Faster data writing using [IOSink](https://api.flutter.dev/flutter/dart-io/IOSink-class.html) and [FileMode](https://api.flutter.dev/flutter/dart-io/FileMode-class.html)
+
+Saving image height and width to avoid UI jumping when loading dynamic sized images
+
+option to enable or disable web local storage cache
+
+Fix local storage initialization issue on web
+
+Update documentation
+
 ## 0.0.9
 
 Added web support

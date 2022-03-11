@@ -7,22 +7,24 @@ part of disposable_cached_images;
 /// If you are already using `flutter_riverpod`, you can pass `ProviderScope` arguments
 /// `observers` and `overrides` without wrapping the root app with `ProviderScope`.
 /// {@endtemplate}
+///
+/// `enableWebCache` Enable or disable web caching
 Future<void> runAppWithDisposableCachedImage(
   final Widget app, {
-  required GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey,
-  List<Override> overrides = const [],
-  List<ProviderObserver>? observers,
+  required final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey,
+  final List<Override> overrides = const [],
+  final List<ProviderObserver>? observers,
+  final bool enableWebCache = false,
 }) async {
   _scaffoldMessengerKey = scaffoldMessengerKey;
 
-  final cache = ImageCacheManger.instance;
+  final cache = ImageCacheManger.getPlatformInstance();
 
-  await cache.init();
+  await cache.init(enableWebCache);
 
   runApp(
     ProviderScope(
       overrides: [
-        // if (!kIsWeb)
         imageDataBaseProvider.overrideWithValue(cache),
         ...overrides,
       ],

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../image_info_data/image_info_data.dart';
 import './image_cache_stub.dart'
     if (dart.library.io) './cache.dart'
     if (dart.library.html) './web_cache.dart';
@@ -13,21 +14,17 @@ final imageDataBaseProvider = Provider.autoDispose<ImageCacheManger>(
 
 /// The image cache interface
 abstract class ImageCacheManger {
-  static ImageCacheManger? _instance;
-
-  static ImageCacheManger get instance {
-    _instance ??= getInstance();
-    return _instance!;
+  static ImageCacheManger getPlatformInstance() {
+    return getInstance();
   }
 
   const ImageCacheManger();
 
-  Future<void> init();
+  Future<void> init(final bool enableWebCache);
 
-  Future<void> addNew({
-    required final String key,
-    required final Uint8List bytes,
-  });
+  Future<void> addNew(final ImageInfoData imageInfo);
+
+  ImageInfoData? getImageInfo(final String key);
 
   Future<Uint8List?> getBytes(final String key);
 

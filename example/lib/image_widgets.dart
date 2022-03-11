@@ -68,7 +68,7 @@ class ImageViewScreen extends StatelessWidget {
       appBar: AppBar(),
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: ImageWidget(imageUrl: imageUrl),
+        child: Center(child: ImageWidget(imageUrl: imageUrl)),
       ),
     );
   }

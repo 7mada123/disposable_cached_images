@@ -36,7 +36,7 @@ class Home extends StatelessWidget {
       appBar: AppBar(actions: [
         IconButton(
           onPressed: () async {
-            await ImageCacheManger.instance.clearCache();
+            await ImageCacheManger.getPlatformInstance().clearCache();
 
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Cache cleared!')),

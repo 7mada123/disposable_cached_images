@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 
 import './interface.dart';
+import '../image_info_data/image_info_data.dart';
 
 ImageCacheManger getInstance() => const _ImageDataBase();
 
@@ -13,53 +14,63 @@ class _ImageDataBase extends ImageCacheManger {
 
   static late final String cachePath;
 
-  static late final Map<String, String> fileContent;
+  static late final Map<String, Map<String, dynamic>> fileContent;
+
+  static late IOSink ioSink;
 
   const _ImageDataBase();
 
   @override
-  Future<void> init() async {
+  Future<void> init(final bool enableWebCache) async {
     final path = (await getTemporaryDirectory()).path;
 
-    cachePath = '$path/image_cache/';
+    cachePath = '$path/images_cache/';
 
-    final jsonFile = File(cachePath + keysFile);
+    final cacheKeysFile = File(cachePath + keysFile);
 
-    final fileExists = jsonFile.existsSync();
+    final fileExists = cacheKeysFile.existsSync();
 
     if (fileExists) {
-      final fileStr = jsonFile.readAsStringSync();
+      final fileStr = cacheKeysFile.readAsStringSync().replaceAll('}{', ',');
+
       if (fileStr.isNotEmpty) {
-        fileContent = Map.from(json.decode(fileStr));
+        fileContent = Map.from(json.decode(fileStr.toString()));
       } else {
         fileContent = {};
       }
     } else {
-      jsonFile.createSync(recursive: true);
+      cacheKeysFile.createSync(recursive: true);
       fileContent = {};
     }
+
+    ioSink = cacheKeysFile.openWrite(mode: FileMode.writeOnlyAppend);
   }
 
   @override
-  Future<void> addNew({
-    required final String key,
-    required final Uint8List bytes,
-  }) async {
-    final imageBytesFile = File(cachePath + key);
+  Future<void> addNew(final ImageInfoData imageInfo) async {
+    if (isContainKey(imageInfo.key)) return;
+
+    fileContent.putIfAbsent(imageInfo.key, () => imageInfo.sizeToMap());
+
+    final imageBytesFile = File(cachePath + imageInfo.key);
 
     await imageBytesFile.create();
 
-    await imageBytesFile.writeAsBytes(bytes);
+    await imageBytesFile.writeAsBytes(
+      imageInfo.memoryImage!.bytes,
+      mode: FileMode.writeOnly,
+    );
 
-    final isContain = isContainKey(key);
+    ioSink.write(json.encode({imageInfo.key: imageInfo.sizeToMap()}));
+  }
 
-    if (!isContain) {
-      fileContent.putIfAbsent(key, () => '');
+  @override
+  ImageInfoData? getImageInfo(String key) {
+    final data = fileContent[key];
 
-      final imageFile = File(cachePath + keysFile);
+    if (data == null) return null;
 
-      imageFile.writeAsString(json.encode(fileContent));
-    }
+    return ImageInfoData.fromMap(data, key);
   }
 
   @override
@@ -91,14 +102,18 @@ class _ImageDataBase extends ImageCacheManger {
 
   @override
   Future<void> clearCache() async {
+    await ioSink.close();
+
     await File(cachePath).delete(recursive: true);
 
-    await File(cachePath + keysFile).create(recursive: true);
+    final cacheKeysFile = File(cachePath + keysFile);
+
+    await cacheKeysFile.create(recursive: true);
 
     fileContent.clear();
+
+    ioSink = cacheKeysFile.openWrite(mode: FileMode.writeOnlyAppend);
   }
 
-  static bool isContainKey(final String key) {
-    return fileContent[key] != null;
-  }
+  static bool isContainKey(final String key) => fileContent[key] != null;
 }

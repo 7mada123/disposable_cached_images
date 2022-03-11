@@ -4,35 +4,48 @@ class _ImageProviderState {
   final bool isLoading;
   final Object? error;
   final MemoryImage? imageProvider;
+  final double? height, width;
 
-  _ImageProviderState loading() {
-    return const _ImageProviderState(
+  const _ImageProviderState(
+    final this.isLoading,
+    final this.imageProvider,
+    this.error,
+    this.height,
+    this.width,
+  );
+
+  const _ImageProviderState.init()
+      : isLoading = false,
+        error = null,
+        imageProvider = null,
+        height = null,
+        width = null;
+
+  _ImageProviderState loading(
+    final double? height,
+    final double? width,
+  ) {
+    return _ImageProviderState(
       true,
       null,
       null,
+      height,
+      width,
     );
   }
 
-  _ImageProviderState notLoading(
-    final MemoryImage? imageProvider, {
+  _ImageProviderState notLoading({
+    final MemoryImage? imageProvider,
     final Object? error,
   }) {
     return _ImageProviderState(
       false,
       imageProvider,
       error,
+      height,
+      width,
     );
   }
-
-  factory _ImageProviderState.init() {
-    return const _ImageProviderState(false, null, null);
-  }
-
-  const _ImageProviderState(
-    final this.isLoading,
-    final this.imageProvider,
-    this.error,
-  );
 
   @override
   bool operator ==(final Object other) {

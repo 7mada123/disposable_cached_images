@@ -49,7 +49,7 @@ class _CachedImageClass extends ImageCacheProviderInterface {
           image,
         );
 
-        imageProvider = MemoryImage(bytes);
+        imageInfo = imageInfo.copyWith(memoryImage: MemoryImage(bytes));
         handelImageProvider();
 
         return;
@@ -58,7 +58,7 @@ class _CachedImageClass extends ImageCacheProviderInterface {
       final bytes = await read(imageDataBaseProvider).getBytes(image.key);
 
       if (bytes != null) {
-        imageProvider = MemoryImage(bytes);
+        imageInfo = imageInfo.copyWith(memoryImage: MemoryImage(bytes));
 
         handelImageProvider();
 
@@ -78,30 +78,22 @@ class _CachedImageClass extends ImageCacheProviderInterface {
 
       if (providerArguments.targetHeight != null ||
           providerArguments.targetWidth != null) {
-        final resizedBytes = await resizeBytes(
+        imageInfo = await imageInfo.resizeImageBytes(
+          providerArguments.targetHeight,
+          providerArguments.targetWidth,
           response.bodyBytes,
-          targetHeight: providerArguments.targetHeight,
-          targetWidth: providerArguments.targetWidth,
         );
 
-        imageProvider = MemoryImage(resizedBytes);
-
-        read(imageDataBaseProvider).addNew(
-          key: image.key,
-          bytes: resizedBytes,
-        );
+        addImageToCache();
 
         await handelImageProvider();
 
         return;
       }
 
-      imageProvider = MemoryImage(response.bodyBytes);
+      imageInfo = await imageInfo.setImageSize(response.bodyBytes);
 
-      read(imageDataBaseProvider).addNew(
-        key: image.key,
-        bytes: response.bodyBytes,
-      );
+      addImageToCache();
 
       await handelImageProvider();
     } catch (e) {
