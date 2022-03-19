@@ -26,9 +26,9 @@ A flutter package for downloading, caching, displaying and releasing images from
 
 ## Features
 
-Download and display images from the Internet and keep them in the cache directory.
+Display images from assets and/or the Internet.
 
-Display images assets.
+Caching images in the cache directory.
 
 Cancel the download if the image widget has been disposed to reduce bandwidth usage.
 
@@ -38,36 +38,11 @@ Remove the image from memory if the image widget has been disposed to reduce dev
 
 ### Setting up
 
-Add `scaffoldMessengerKey` to the `MaterialApp`
-
-> you can read more about `scaffoldMessengerKey` on [docs.flutter](https://docs.flutter.dev/release/breaking-changes/scaffold-messenger)
-
-```dart
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: const Home(),
-      scaffoldMessengerKey: scaffoldMessengerKey,
-    );
-  }
-}
-
-final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
-```
-
-In the main method use `runAppWithDisposableCachedImage` instead of `runApp` and pass it the `scaffoldMessengerKey` to initialize the package
-
-> the `scaffoldMessengerKey.currentContext` is used to precache the image ahead of being request in the UI, [learn more about precacheImage](https://api.flutter.dev/flutter/widgets/precacheImage.html).
+All you have to do is to warp the root widget with `runAppWithDisposableCachedImage` instead of `runApp`.
 
 ```dart
 void main() {
-  runAppWithDisposableCachedImage(
-    const MyApp(),
-    scaffoldMessengerKey: scaffoldMessengerKey,
-  );
+  runAppWithDisposableCachedImage(const MyApp());
 }
 ```
 
@@ -77,32 +52,41 @@ Now your app is ready to use the package.
 
 ### Displaying images
 
-Use `DisposableCachedImageWidget` to display images form internet.
+Use `DisposableCachedImage` named constructors to display images.
+
+##### Obtaining an image from a URL
 
 ```dart
-DisposableCachedImageWidget(
-image: 'https://picsum.photos/id/23/200/300',
+DisposableCachedImage.network(imageUrl: 'https://picsum.photos/id/23/200/300');
+```
+
+##### Obtaining an image from assets using path
+
+```dart
+DisposableCachedImage.assets(imagePath: 'images/a_dot_burr.jpeg');
+```
+
+##### Obtaining an image from a URL with dynamic height 
+
+```dart
+DisposableCachedImage.dynamicHeight(
+  imageUrl: 'https://picsum.photos/id/23/200/300',
+  // Provide the width of the widget so that the height can be calculated accordingly
+  imageWidth: MediaQuery.of(context).size.width * 0.5,
 );
 ```
 
-You can also display images form assets by passing the image path.
-
-```dart
-DisposableCachedImageWidget(
-image: 'images/a_dot_burr.jpeg',
-imageType: ImageType.assets,
-);
-```
+______
 
 You can display your custom widgets while the image is loading, has an error and when it is ready as shown below
 
 ```dart
-DisposableCachedImageWidget(
- image: imageUrl,
+DisposableCachedImage.network(
+ imageUrl: imageUrl,
  onLoading: (context) => const Center(
    child: Icon(Icons.downloading),
  ),
- onError: (context, reDownload) => Center(
+ onError: (context, error, reDownload) => Center(
    child: IconButton(
      onPressed: reDownload,
      icon: const Icon(Icons.download),
@@ -120,38 +104,37 @@ DisposableCachedImageWidget(
 );
 ```
 
-You can Provide a maximum height and width values for image by passing the values to `maxCacheHeight` and `maxCacheWidth` arguments, If the actual height or width of the image is less than the provided value, the provided value will be ignored.
+You can Provide a maximum width value for the image by passing the it to `maxCacheWidth` argument, If the actual width of the image is less than the provided value, the provided value will be ignored.
 
 The image will be resized before it's displayed in the UI and saved to the device storage.
 
 ```dart
 DisposableCachedImageWidget(
  image: imageUrl,
- maxCacheHeight: 300,
  maxCacheWidth: 300,
 );
 ```
+> Animated images will not be resized due to animation loss issue.
 
-### Caching images on the web
+#### Caching images on the web
 
 If you want to enable web caching, you must declare it in `runAppWithDisposableCachedImage` as shown below.
 
 ```dart
 runAppWithDisposableCachedImage(
-  const MyApp(),
-  scaffoldMessengerKey: scaffoldMessengerKey,
+  const MyApp(),  
   // enable Web cache, default false
   enableWebCache: true,
 );
 ```
 
-> In both cases the images will be saved in memory as variables, and the web storage cache should not be enabled if your application uses many images
+> In both cases the images will be saved in memory as variables, and the web storage cache should not be enabled if your application uses many images because of the local storage size limit.
 
-### Display images with dynamic size
+#### Remove all cached images
 
-The package saves the height and width of the image when the image is first downloaded, and this reduces layout jumps when an already cached image is loaded.
-
-For example providing a `maxCacheWidth` with the width of the `Widget` or the width of the device so that the height can be calculated according to the width otherwise you could end up with white space around the height of the image.
+```dart
+DisposableCachedImage.clearCache();
+```
 
 ## How it works
 
