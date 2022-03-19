@@ -1,10 +1,4 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
-
-import './image_info_data_stub.dart'
-    if (dart.library.io) './image_size.dart'
-    if (dart.library.html) './web_image_size.dart';
 
 /// A class to handle the necessary image data
 class ImageInfoData {
@@ -39,26 +33,10 @@ class ImageInfoData {
         width = null,
         memoryImage = null;
 
-  Size? getSize() {
-    return width == null || height == null ? null : Size(width!, height!);
-  }
-
-  Future<ImageInfoData> resizeImageBytes(
-    final int? targetHeight,
-    final int? targetWidth,
-    final Uint8List bytes,
-  ) {
-    return resizeImage(targetHeight, targetWidth, bytes);
-  }
-
-  Future<ImageInfoData> setImageSize(final Uint8List bytes) {
-    return setImageActualSize(bytes);
-  }
-
-  Map<String, double> sizeToMap() {
+  Map<String, double?> sizeToMap() {
     return {
-      'width': width!,
-      'height': height!,
+      'width': width,
+      'height': height,
     };
   }
 
@@ -74,7 +52,7 @@ class ImageInfoData {
   }
 
   @override
-  bool operator ==(Object other) {
+  bool operator ==(final other) {
     if (identical(this, other)) return true;
 
     return other is ImageInfoData &&

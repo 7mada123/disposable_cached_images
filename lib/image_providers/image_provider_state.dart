@@ -6,44 +6,27 @@ class _ImageProviderState {
   final MemoryImage? imageProvider;
   final double? height, width;
 
-  const _ImageProviderState(
-    final this.isLoading,
+  const _ImageProviderState({
+    final this.isLoading = false,
     final this.imageProvider,
     this.error,
     this.height,
     this.width,
-  );
+  });
 
-  const _ImageProviderState.init()
-      : isLoading = false,
-        error = null,
-        imageProvider = null,
-        height = null,
-        width = null;
-
-  _ImageProviderState loading(
+  _ImageProviderState copyWith({
+    final bool? isLoading,
+    final Object? error,
+    final MemoryImage? imageProvider,
     final double? height,
     final double? width,
-  ) {
-    return _ImageProviderState(
-      true,
-      null,
-      null,
-      height,
-      width,
-    );
-  }
-
-  _ImageProviderState notLoading({
-    final MemoryImage? imageProvider,
-    final Object? error,
   }) {
     return _ImageProviderState(
-      false,
-      imageProvider,
-      error,
-      height,
-      width,
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
+      imageProvider: imageProvider ?? this.imageProvider,
+      height: height ?? this.height,
+      width: width ?? this.width,
     );
   }
 

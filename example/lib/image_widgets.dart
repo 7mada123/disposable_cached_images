@@ -21,8 +21,8 @@ class ImageWidget extends StatelessWidget {
           ),
         ),
       ),
-      child: DisposableCachedImageWidget(
-        image: imageUrl,
+      child: DisposableCachedImage.network(
+        imageUrl: imageUrl,
         onLoading: (context) => const Center(
           child: Icon(Icons.downloading),
         ),

@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 
 import './interface.dart';
-import '../image_info_data/image_info_data.dart';
+import '../image_info_data.dart';
 
 ImageCacheManger getInstance() => const _ImageDataBase();
 
@@ -28,16 +28,10 @@ class _ImageDataBase extends ImageCacheManger {
 
     final cacheKeysFile = File(cachePath + keysFile);
 
-    final fileExists = cacheKeysFile.existsSync();
-
-    if (fileExists) {
+    if (cacheKeysFile.existsSync()) {
       final fileStr = cacheKeysFile.readAsStringSync().replaceAll('}{', ',');
 
-      if (fileStr.isNotEmpty) {
-        fileContent = Map.from(json.decode(fileStr.toString()));
-      } else {
-        fileContent = {};
-      }
+      fileContent = fileStr.isNotEmpty ? Map.from(json.decode(fileStr)) : {};
     } else {
       cacheKeysFile.createSync(recursive: true);
       fileContent = {};

@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../image_info_data/image_info_data.dart';
+import '../image_info_data.dart';
 import './image_cache_stub.dart'
     if (dart.library.io) './cache.dart'
     if (dart.library.html) './web_cache.dart';

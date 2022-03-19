@@ -1,3 +1,19 @@
+## 1.0.0 stable release
+
+Fixed an issue where animated images (gif for example) animations were missing when resizing
+
+Fixed an issue where dynamic height images would not resize when providing dynamic width
+
+Reduce the time required to prefetches an image into the image cache
+
+### Breaking change
+
+Removed the need for `scaffoldMessengerKey` so you don't have to pass it in `runAppWithDisposableCachedImage`
+
+Removed `ImageType` in favor of [Named constructors](https://dart.dev/guides/language/language-tour#named-constructors)
+
+The `maxCacheHeight` has been removed, now the image height will be calculated according to the provided `maxCacheWidth` and/or the actual image width
+
 ## 0.1.0
 
 Faster data writing using [IOSink](https://api.flutter.dev/flutter/dart-io/IOSink-class.html) and [FileMode](https://api.flutter.dev/flutter/dart-io/FileMode-class.html)

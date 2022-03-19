@@ -7,10 +7,7 @@ import './image_widgets.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  runAppWithDisposableCachedImage(
-    const MyApp(),
-    scaffoldMessengerKey: scaffoldMessengerKey,
-  );
+  runAppWithDisposableCachedImage(const MyApp());
 }
 
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -20,10 +17,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: const Home(),
-      scaffoldMessengerKey: scaffoldMessengerKey,
-    );
+    return const MaterialApp(home: Home());
   }
 }
 

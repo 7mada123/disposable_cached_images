@@ -3,28 +3,43 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import './image_info_data.dart';
+import '../image_info_data.dart';
 
 extension ImageSizeFunc on ImageInfoData {
-  Future<ImageInfoData> resizeImage(
-    final int? targetHeight,
-    final int? targetWidth,
-    final Uint8List bytes,
-  ) async {
-    final imageDescriptor = await _getImageDescriptor(bytes);
+  Future<ImageInfoData> resizeImage(final int targetWidth) async {
+    final imageDescriptor = await _getImageDescriptor(memoryImage!.bytes);
 
-    final height = _getTargetSize(imageDescriptor.height, targetHeight);
+    if (imageDescriptor.width <= targetWidth) {
+      final imageInfo = copyWith(
+        width: imageDescriptor.width.toDouble(),
+        height: imageDescriptor.height.toDouble(),
+      );
 
-    final width = _getTargetSize(imageDescriptor.width, targetWidth);
+      imageDescriptor.dispose();
+
+      return imageInfo;
+    }
 
     final codec = await imageDescriptor.instantiateCodec(
-      targetHeight: height,
-      targetWidth: width,
+      targetWidth: targetWidth,
     );
 
     final frameInfo = await codec.getNextFrame();
 
     final targetUiImage = frameInfo.image;
+
+    if (targetUiImage.width == imageDescriptor.width) {
+      final imageInfo = copyWith(
+        width: imageDescriptor.width.toDouble(),
+        height: imageDescriptor.height.toDouble(),
+      );
+
+      imageDescriptor.dispose();
+      codec.dispose();
+      targetUiImage.dispose();
+
+      return imageInfo;
+    }
 
     imageDescriptor.dispose();
     codec.dispose();
@@ -35,8 +50,8 @@ extension ImageSizeFunc on ImageInfoData {
 
     final imageInfo = copyWith(
       memoryImage: MemoryImage(rezizedByteData!.buffer.asUint8List()),
-      height: height?.toDouble() ?? targetUiImage.height.toDouble(),
-      width: width?.toDouble() ?? targetUiImage.width.toDouble(),
+      height: targetUiImage.height.toDouble(),
+      width: targetUiImage.width.toDouble(),
     );
 
     targetUiImage.dispose();
@@ -44,11 +59,10 @@ extension ImageSizeFunc on ImageInfoData {
     return imageInfo;
   }
 
-  Future<ImageInfoData> setImageActualSize(final Uint8List bytes) async {
-    final imageDescriptor = await _getImageDescriptor(bytes);
+  Future<ImageInfoData> setImageSize() async {
+    final imageDescriptor = await _getImageDescriptor(memoryImage!.bytes);
 
     final imageInfo = copyWith(
-      memoryImage: MemoryImage(bytes),
       height: imageDescriptor.height.toDouble(),
       width: imageDescriptor.width.toDouble(),
     );
@@ -68,11 +82,5 @@ extension ImageSizeFunc on ImageInfoData {
     imageBuffer.dispose();
 
     return imageDescriptor;
-  }
-
-  static int? _getTargetSize(final int imageSize, final int? targetSize) {
-    if (targetSize == null || imageSize < targetSize) return null;
-
-    return targetSize;
   }
 }

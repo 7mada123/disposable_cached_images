@@ -28,44 +28,31 @@ final _imageProvider = StateNotifierProvider.autoDispose.family<
 
 class _CachedImageClass extends ImageCacheProviderInterface {
   final ImageProviderArguments providerArguments;
+  final http.Client httpClient;
 
   _CachedImageClass(
     final Reader read,
     final this.providerArguments,
-    final http.Client httpClient,
+    final this.httpClient,
     final void Function(MemoryImage? memoryImage) onMemoryImage,
   ) : super(
           read: read,
           image: providerArguments.image,
           onMemoryImage: onMemoryImage,
-          httpClient: httpClient,
         );
 
   @override
   Future<void> getImage() async {
     try {
-      if (providerArguments.imageType == ImageType.assets) {
-        final bytes = await read(imageDataBaseProvider).getBytesFormAssets(
-          image,
-        );
-
-        imageInfo = imageInfo.copyWith(memoryImage: MemoryImage(bytes));
-        handelImageProvider();
-
-        return;
-      }
-
       final bytes = await read(imageDataBaseProvider).getBytes(image.key);
 
       if (bytes != null) {
         imageInfo = imageInfo.copyWith(memoryImage: MemoryImage(bytes));
 
-        handelImageProvider();
-
-        return;
+        return handelImageProvider();
       }
 
-      handelNetworkImage();
+      await handelNetworkImage();
     } catch (e) {
       httpClient.close();
       onImageError(e);
@@ -73,32 +60,26 @@ class _CachedImageClass extends ImageCacheProviderInterface {
   }
 
   Future<void> handelNetworkImage() async {
-    try {
-      final response = await httpClient.get(Uri.parse(image));
+    final response = await httpClient.get(Uri.parse(image));
 
-      if (providerArguments.targetHeight != null ||
-          providerArguments.targetWidth != null) {
-        imageInfo = await imageInfo.resizeImageBytes(
-          providerArguments.targetHeight,
-          providerArguments.targetWidth,
-          response.bodyBytes,
-        );
+    imageInfo = imageInfo.copyWith(
+      memoryImage: MemoryImage(response.bodyBytes),
+    );
 
-        addImageToCache();
+    httpClient.close();
 
-        await handelImageProvider();
+    if (providerArguments.targetWidth != null) {
+      imageInfo = await imageInfo.resizeImage(providerArguments.targetWidth!);
 
-        return;
-      }
-
-      imageInfo = await imageInfo.setImageSize(response.bodyBytes);
+      await handelImageProvider();
 
       addImageToCache();
 
-      await handelImageProvider();
-    } catch (e) {
-      httpClient.close();
-      onImageError(e);
+      return;
     }
+
+    await handelImageProvider();
+
+    addImageToCache();
   }
 }

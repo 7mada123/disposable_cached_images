@@ -9,7 +9,7 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 
 import './interface.dart';
-import '../image_info_data/image_info_data.dart';
+import '../image_info_data.dart';
 
 ImageCacheManger getInstance() => const _WebImageDataBase();
 
