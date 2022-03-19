@@ -26,7 +26,7 @@ class _LoadingWidget extends StatelessWidget {
 
   const _LoadingWidget(
     this.widget, {
-    Key? key,
+    final Key? key,
   }) : super(key: key);
 
   @override
@@ -44,13 +44,13 @@ class _ErrorWidget extends StatelessWidget {
 
   const _ErrorWidget(
     this.widget, {
-    Key? key,
+    final Key? key,
     required this.error,
     required this.refreshProvider,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(final context) {
     return widget.onImage != null
         ? widget.onError!(context, error, refreshProvider)
         : const SizedBox();
@@ -60,7 +60,7 @@ class _ErrorWidget extends StatelessWidget {
 class _DynamicHeightImageWidge extends StatelessWidget {
   const _DynamicHeightImageWidge(
     this.widget, {
-    Key? key,
+    final Key? key,
     required this.imageProvider,
     required this.height,
     required this.width,
@@ -71,7 +71,7 @@ class _DynamicHeightImageWidge extends StatelessWidget {
   final double? height, width;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(final context) {
     return widget.onImage != null
         ? widget.onImage!(context, imageProvider)
         : Container(
@@ -81,6 +81,7 @@ class _DynamicHeightImageWidge extends StatelessWidget {
               image: DecorationImage(
                 image: imageProvider,
                 fit: BoxFit.fitWidth,
+                filterQuality: widget.filterQuality,
               ),
             ),
           );
@@ -90,7 +91,7 @@ class _DynamicHeightImageWidge extends StatelessWidget {
 class _ImageWidge extends StatelessWidget {
   const _ImageWidge(
     this.widget, {
-    Key? key,
+    final Key? key,
     required this.imageProvider,
   }) : super(key: key);
 
@@ -98,9 +99,15 @@ class _ImageWidge extends StatelessWidget {
   final MemoryImage imageProvider;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(final context) {
     return widget.onImage != null
         ? widget.onImage!(context, imageProvider)
-        : Image.memory(imageProvider.bytes, fit: widget.fit);
+        : Image.memory(
+            imageProvider.bytes,
+            fit: widget.fit,
+            height: widget.height,
+            width: widget.width,
+            filterQuality: widget.filterQuality,
+          );
   }
 }
