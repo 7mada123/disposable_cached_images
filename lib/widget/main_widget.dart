@@ -115,7 +115,7 @@ class DisposableCachedImage extends ConsumerWidget {
     this.fit = BoxFit.fitHeight,
     this.height,
     this.width,
-  })  : _provider = _dynamicSizemageProvider(
+  })  : _provider = _imageProvider(
           ImageProviderArguments(
             image: imageUrl,
             targetWidth: maxCacheWidth,
