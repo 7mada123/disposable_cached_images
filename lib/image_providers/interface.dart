@@ -50,7 +50,13 @@ abstract class ImageCacheProviderInterface
   Future<void> getImage();
 
   void onImageError(final Object e) {
-    if (mounted) state = state.copyWith(isLoading: false, error: e);
+    if (!mounted) return;
+
+    state = state.copyWith(
+      isLoading: false,
+      error: e,
+      stackTrace: StackTrace.current,
+    );
   }
 
   Future<void> handelImageProvider() async {
@@ -61,14 +67,12 @@ abstract class ImageCacheProviderInterface
 
       if (!mounted) return;
 
-      final error = await preCache(imageInfo);
+      await preCache(imageInfo);
 
       if (!mounted) {
         imageInfo.memoryImage!.evict();
         return;
       }
-
-      if (error != null) throw error;
 
       state = state.copyWith(
         isLoading: false,
@@ -87,37 +91,34 @@ abstract class ImageCacheProviderInterface
     return read(imageDataBaseProvider).addNew(imageInfo);
   }
 
-  static Future<Object?> preCache(final ImageInfoData imageInfo) async {
+  static Future<void> preCache(final ImageInfoData imageInfo) async {
     final completer = Completer<void>();
 
     final stream = imageInfo.memoryImage!.resolve(ImageConfiguration.empty);
 
     late final ImageStreamListener listener;
 
-    late final Object? error;
-
     listener = ImageStreamListener(
       (final image, final synchronousCall) {
         if (!completer.isCompleted) completer.complete();
 
         stream.removeListener(listener);
-
-        error = null;
       },
       onError: (final exception, final stackTrace) {
-        if (!completer.isCompleted) completer.complete();
+        if (!completer.isCompleted) {
+          completer.completeError(
+            exception,
+            stackTrace,
+          );
+        }
 
         stream.removeListener(listener);
-
-        error = exception;
       },
     );
 
     stream.addListener(listener);
 
-    await completer.future;
-
-    return error;
+    return completer.future;
   }
 }
 

@@ -26,7 +26,7 @@ class ImageWidget extends StatelessWidget {
         onLoading: (context) => const Center(
           child: Icon(Icons.downloading),
         ),
-        onError: (context, error, reDownload) => Center(
+        onError: (context, error, stackTrace, reDownload) => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,

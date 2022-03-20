@@ -3,6 +3,7 @@ part of disposable_cached_images;
 typedef OnError = Widget Function(
   BuildContext context,
   Object error,
+  StackTrace stackTrace,
   VoidCallback? reDownload,
 );
 
@@ -40,19 +41,26 @@ class _LoadingWidget extends StatelessWidget {
 class _ErrorWidget extends StatelessWidget {
   final DisposableCachedImage widget;
   final Object error;
+  final StackTrace stackTrace;
   final VoidCallback refreshProvider;
 
   const _ErrorWidget(
     this.widget, {
     final Key? key,
     required this.error,
+    required this.stackTrace,
     required this.refreshProvider,
   }) : super(key: key);
 
   @override
   Widget build(final context) {
-    return widget.onImage != null
-        ? widget.onError!(context, error, refreshProvider)
+    return widget.onError != null
+        ? widget.onError!(
+            context,
+            error,
+            stackTrace,
+            refreshProvider,
+          )
         : const SizedBox();
   }
 }
@@ -63,12 +71,11 @@ class _DynamicHeightImageWidge extends StatelessWidget {
     final Key? key,
     required this.imageProvider,
     required this.height,
-    required this.width,
   }) : super(key: key);
 
   final DisposableCachedImage widget;
   final MemoryImage imageProvider;
-  final double? height, width;
+  final double? height;
 
   @override
   Widget build(final context) {
@@ -76,7 +83,7 @@ class _DynamicHeightImageWidge extends StatelessWidget {
         ? widget.onImage!(context, imageProvider)
         : Container(
             height: height,
-            width: width,
+            width: widget.imageWidth!,
             decoration: BoxDecoration(
               image: DecorationImage(
                 image: imageProvider,

@@ -78,6 +78,8 @@ class _CachedImageClass extends ImageCacheProviderInterface {
       return;
     }
 
+    imageInfo = await imageInfo.setImageSize();
+
     await handelImageProvider();
 
     addImageToCache();

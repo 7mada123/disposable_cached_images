@@ -3,6 +3,7 @@ part of disposable_cached_images;
 class _ImageProviderState {
   final bool isLoading;
   final Object? error;
+  final StackTrace? stackTrace;
   final MemoryImage? imageProvider;
   final double? height, width;
 
@@ -11,6 +12,7 @@ class _ImageProviderState {
     final this.imageProvider,
     this.error,
     this.height,
+    this.stackTrace,
     this.width,
   });
 
@@ -20,6 +22,7 @@ class _ImageProviderState {
     final MemoryImage? imageProvider,
     final double? height,
     final double? width,
+    final StackTrace? stackTrace,
   }) {
     return _ImageProviderState(
       isLoading: isLoading ?? this.isLoading,
@@ -27,6 +30,7 @@ class _ImageProviderState {
       imageProvider: imageProvider ?? this.imageProvider,
       height: height ?? this.height,
       width: width ?? this.width,
+      stackTrace: stackTrace ?? this.stackTrace,
     );
   }
 
@@ -37,10 +41,14 @@ class _ImageProviderState {
     return other is _ImageProviderState &&
         other.isLoading == isLoading &&
         other.error == error &&
+        other.stackTrace == stackTrace &&
         other.imageProvider == imageProvider;
   }
 
   @override
   int get hashCode =>
-      isLoading.hashCode ^ error.hashCode ^ imageProvider.hashCode;
+      isLoading.hashCode ^
+      error.hashCode ^
+      imageProvider.hashCode ^
+      stackTrace.hashCode;
 }

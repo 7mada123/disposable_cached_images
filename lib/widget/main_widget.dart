@@ -7,19 +7,20 @@ class DisposableCachedImage extends ConsumerWidget {
   }
 
   /// Provide a maximum value for image width,
-  ///  If the actual width of the image is less than the provided value, the provided value will be ignored.
+  /// If the actual width of the image is less than the provided value,
+  /// the provided value will be ignored.
   ///
-  ///  The image will be resized before it is displayed in the UI and saved to the device storage
+  ///  The image will be resized before it is displayed in the UI
+  /// and saved to the device storage
   final int? maxCacheWidth;
 
-  /// [BoxFit] How to inscribe the image into the space allocated during layout.
+  /// How to inscribe the image into the space allocated during layout.
   ///
   /// The default varies based on the other fields. See the discussion at
   /// [paintImage].
   final BoxFit? fit;
 
-  // TODO
-  ///
+  /// The duration of fade animation.
   final Duration fadeDuration;
 
   /// A widget to display when loading the image,
@@ -43,7 +44,8 @@ class DisposableCachedImage extends ConsumerWidget {
   /// [FilterQuality] The rendering quality of the image.
   final FilterQuality filterQuality;
 
-  /// Creates a widget that displays image from the network and cache it in cache directory.
+  /// Creates a widget that displays image from the network and
+  /// cache it in cache directory.
   ///
   /// Either the [width] and [height] arguments should be specified, or the
   /// widget should be placed in a context that sets tight layout constraints.
@@ -90,7 +92,7 @@ class DisposableCachedImage extends ConsumerWidget {
         ),
         super(key: key);
 
-  /// [dynamicHeight] image widget width
+  /// [DisposableCachedImage.dynamicHeight] image widget width.
   final double? imageWidth;
 
   /// Creates a widget that displays image from the network with dynamic image
@@ -126,7 +128,7 @@ class DisposableCachedImage extends ConsumerWidget {
     final providerState = ref.watch(_provider);
 
     if (imageWidth != null) {
-      final height = _getDynamicHeight(
+      final dynamicHeight = _getDynamicHeight(
         targetWidth: imageWidth!,
         width: providerState.width,
         height: providerState.height,
@@ -135,7 +137,7 @@ class DisposableCachedImage extends ConsumerWidget {
       return SizedBox(
         key: key,
         width: imageWidth,
-        height: height,
+        height: dynamicHeight,
         child: AnimatedSwitcher(
           duration: fadeDuration,
           child: providerState.isLoading
@@ -144,13 +146,13 @@ class DisposableCachedImage extends ConsumerWidget {
                   ? _ErrorWidget(
                       this,
                       error: providerState.error!,
+                      stackTrace: providerState.stackTrace!,
                       refreshProvider: () => ref.refresh(_provider.notifier),
                     )
                   : _DynamicHeightImageWidge(
                       this,
                       imageProvider: providerState.imageProvider!,
-                      height: height,
-                      width: imageWidth,
+                      height: dynamicHeight,
                     ),
         ),
       );
@@ -163,6 +165,7 @@ class DisposableCachedImage extends ConsumerWidget {
                 ? _ErrorWidget(
                     this,
                     error: providerState.error!,
+                    stackTrace: providerState.stackTrace!,
                     refreshProvider: () => ref.refresh(_provider.notifier),
                   )
                 : _ImageWidge(
