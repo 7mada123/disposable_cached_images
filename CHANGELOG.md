@@ -1,6 +1,6 @@
 ## 1.0.0 stable release
 
-Fixed an issue where animated images (gif for example) animations were missing when resizing
+Fixed an issue where animated images loss animations when resizing
 
 Fixed an issue where dynamic height images would not resize when providing dynamic width
 
@@ -8,11 +8,11 @@ Reduce the time required to prefetches an image into the image cache
 
 ### Breaking change
 
-Removed the need for `scaffoldMessengerKey` so you don't have to pass it in `runAppWithDisposableCachedImage`
+Removed the need for `scaffoldMessengerKey`
 
 Removed `ImageType` in favor of [Named constructors](https://dart.dev/guides/language/language-tour#named-constructors)
 
-The `maxCacheHeight` has been removed, now the image height will be calculated according to the provided `maxCacheWidth` and/or the actual image width
+The `maxCacheHeight` has been removed, now the image height will be calculated according to the provided `maxCacheWidth`
 
 ## 0.1.0
 
