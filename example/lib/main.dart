@@ -1,4 +1,3 @@
-import 'package:disposable_cached_images/cache/interface.dart';
 import 'package:disposable_cached_images/disposable_cached_images.dart';
 import 'package:flutter/material.dart';
 
@@ -9,8 +8,6 @@ void main() {
 
   runAppWithDisposableCachedImage(const MyApp());
 }
-
-final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -27,18 +24,20 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(actions: [
-        IconButton(
-          onPressed: () async {
-            await ImageCacheManger.getPlatformInstance().clearCache();
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await DisposableCachedImage.clearCache();
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Cache cleared!')),
-            );
-          },
-          icon: const Icon(Icons.clear),
-        )
-      ]),
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Cache cleared!')),
+              );
+            },
+            icon: const Icon(Icons.clear),
+          )
+        ],
+      ),
       body: GridView.builder(
         padding: const EdgeInsets.all(20),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -47,9 +46,7 @@ class Home extends StatelessWidget {
           crossAxisSpacing: 20,
         ),
         itemCount: images.length,
-        itemBuilder: (context, index) => ImageWidget(
-          imageUrl: images[index],
-        ),
+        itemBuilder: (context, index) => ImageWidget(imageUrl: images[index]),
       ),
     );
   }
