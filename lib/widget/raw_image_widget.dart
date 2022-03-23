@@ -1,6 +1,6 @@
 part of disposable_cached_images;
 
-/// [RawImage] with [BorderRadius]
+/// [RawImage] with [BorderRadius] and [BoxShape]
 class _RawImage extends RawImage {
   const _RawImage({
     required final ui.Image image,
@@ -12,6 +12,7 @@ class _RawImage extends RawImage {
     required final bool isAntiAlias,
     required final bool matchTextDirection,
     required final Animation<double> opacity,
+    required final this.shape,
     final this.borderRadius,
     final double? height,
     final double? width,
@@ -38,6 +39,7 @@ class _RawImage extends RawImage {
         );
 
   final BorderRadius? borderRadius;
+  final BoxShape shape;
 
   @override
   RenderImage createRenderObject(final BuildContext context) {
@@ -54,6 +56,7 @@ class _RawImage extends RawImage {
     return _RenderImage(
       image: image!.clone(),
       borderRadius: borderRadius,
+      shape: shape,
       width: width,
       height: height,
       scale: scale,
@@ -81,16 +84,20 @@ class _RawImage extends RawImage {
   ) {
     super.updateRenderObject(
       context,
-      renderObject..borderRadius = borderRadius,
+      renderObject
+        ..borderRadius = borderRadius
+        ..shape = shape,
     );
   }
 }
 
 class _RenderImage extends RenderImage {
   BorderRadius? borderRadius;
+  BoxShape shape;
 
   _RenderImage({
     required this.borderRadius,
+    required this.shape,
     required final ui.Image image,
     final double? width,
     final double? height,
@@ -128,10 +135,24 @@ class _RenderImage extends RenderImage {
 
   @override
   void paint(final PaintingContext context, final Offset offset) {
-    if (borderRadius != null) {
+    if (shape == BoxShape.circle) {
+      context.canvas.clipPath(ovalPAth(offset, size));
+    } else if (borderRadius != null) {
       context.canvas.clipRRect(borderRadius!.toRRect(offset & size));
     }
 
     super.paint(context, offset);
+  }
+
+  static Path ovalPAth(final Offset offset, final Size size) {
+    final rect = offset & size;
+
+    return Path()
+      ..addOval(
+        Rect.fromCircle(
+          center: rect.center,
+          radius: rect.shortestSide / 2.0,
+        ),
+      );
   }
 }
