@@ -1,15 +1,15 @@
 part of disposable_cached_images;
 
-abstract class ImageCacheProviderInterface
+abstract class _ImageCacheProviderInterface
     extends StateNotifier<_ImageProviderState> {
   final Reader read;
-  final ImageProviderArguments providerArguments;
+  final _ImageProviderArguments providerArguments;
   final String key;
 
-  ImageCacheProviderInterface({
+  _ImageCacheProviderInterface({
     required final this.read,
     required final this.providerArguments,
-  })  : key = getImageKey(providerArguments.image),
+  })  : key = providerArguments.image.key,
         super(const _ImageProviderState()) {
     final usedImageInfo = read(_usedImageProvider).getImageInfo(key);
 
@@ -59,21 +59,22 @@ abstract class ImageCacheProviderInterface
 
   Future<void> handelImageProvider({
     final int? targetWidth,
-    final SetSizeFunc? onSizeFunc,
-    final SetRezieSizeFunc? onReSizeFunc,
+    final int? targetHeight,
+    final OnSizeFunc? onSizeFunc,
   }) async {
     read(_usedImageProvider).add(imageInfo);
 
     try {
       final descriptor = await _getImageDescriptor(imageInfo.imageBytes!);
 
-      if (onSizeFunc != null) onSizeFunc(descriptor);
-
-      final codec = await descriptor.instantiateCodec(targetWidth: targetWidth);
+      final codec = await descriptor.instantiateCodec(
+        targetWidth: targetWidth,
+        targetHeight: targetHeight,
+      );
 
       if (codec.frameCount > 1) {
         descriptor.dispose();
-        return _handelAnimatedImage(codec);
+        return _handelAnimatedImage(codec, onSizeFunc: onSizeFunc);
       }
 
       final frameInfo = await codec.getNextFrame();
@@ -81,7 +82,12 @@ abstract class ImageCacheProviderInterface
       descriptor.dispose();
       codec.dispose();
 
-      if (onReSizeFunc != null) onReSizeFunc(frameInfo.image);
+      if (onSizeFunc != null) {
+        onSizeFunc(
+          frameInfo.image.height.toDouble(),
+          frameInfo.image.width.toDouble(),
+        );
+      }
 
       if (!mounted) {
         frameInfo.image.dispose();
@@ -109,10 +115,20 @@ abstract class ImageCacheProviderInterface
     super.dispose();
   }
 
-  Future<void> _handelAnimatedImage(final ui.Codec codec) async {
+  Future<void> _handelAnimatedImage(
+    final ui.Codec codec, {
+    final OnSizeFunc? onSizeFunc,
+  }) async {
     final delayed = Stopwatch()..start();
 
     final newFrame = await codec.getNextFrame();
+
+    if (onSizeFunc != null) {
+      onSizeFunc(
+        newFrame.image.height.toDouble(),
+        newFrame.image.width.toDouble(),
+      );
+    }
 
     if (!mounted) {
       newFrame.image.dispose();
@@ -139,18 +155,19 @@ abstract class ImageCacheProviderInterface
 
     return descriptor;
   }
-
-  static final illegalFilenameCharacters = RegExp(r'[/#<>$+%!`&*|{}?"=\\ @:]');
-
-  static String getImageKey(final String image) {
-    return image
-        .substring(0, image.length > 255 ? 255 : image.length)
-        .replaceAll(illegalFilenameCharacters, '');
-  }
 }
 
 typedef DisposableImageProvider = AutoDisposeStateNotifierProvider<
-    ImageCacheProviderInterface, _ImageProviderState>;
+    _ImageCacheProviderInterface, _ImageProviderState>;
 
-typedef SetSizeFunc = void Function(ui.ImageDescriptor descriptor);
-typedef SetRezieSizeFunc = void Function(ui.Image image);
+typedef OnSizeFunc = void Function(double height, double width);
+
+extension on String {
+  /// remove illegal file name characters when saving file
+  static final illegalFilenameCharacters = RegExp(r'[/#<>$+%!`&*|{}?"=\\ @:]');
+
+  String get key {
+    return substring(0, length > 255 ? 255 : length)
+        .replaceAll(illegalFilenameCharacters, '');
+  }
+}

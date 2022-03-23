@@ -1,7 +1,9 @@
 part of disposable_cached_images;
 
 final _networkImageProvider = StateNotifierProvider.autoDispose.family<
-    ImageCacheProviderInterface, _ImageProviderState, ImageProviderArguments>((
+    _ImageCacheProviderInterface,
+    _ImageProviderState,
+    _ImageProviderArguments>((
   final ref,
   final providerArguments,
 ) {
@@ -13,12 +15,12 @@ final _networkImageProvider = StateNotifierProvider.autoDispose.family<
   );
 });
 
-class _NetworkImageProvider extends ImageCacheProviderInterface {
+class _NetworkImageProvider extends _ImageCacheProviderInterface {
   final httpClient = http.Client();
 
   _NetworkImageProvider(
     final Reader read,
-    final ImageProviderArguments providerArguments,
+    final _ImageProviderArguments providerArguments,
   ) : super(
           read: read,
           providerArguments: providerArguments,
@@ -36,6 +38,8 @@ class _NetworkImageProvider extends ImageCacheProviderInterface {
       final bytes = await read(imageDataBaseProvider).getBytes(key);
 
       if (bytes != null) {
+        httpClient.close();
+
         imageInfo = imageInfo.copyWith(imageBytes: bytes);
 
         await handelImageProvider();
@@ -51,35 +55,24 @@ class _NetworkImageProvider extends ImageCacheProviderInterface {
   }
 
   Future<void> _handelNetworkImage() async {
-    final response = await httpClient.get(Uri.parse(providerArguments.image));
-
-    imageInfo = imageInfo.copyWith(imageBytes: response.bodyBytes);
+    final response = await httpClient.get(
+      Uri.parse(providerArguments.image),
+      headers: providerArguments.headers,
+    );
 
     httpClient.close();
 
-    if (providerArguments.targetWidth != null) {
-      await handelImageProvider(
-        targetWidth: providerArguments.targetWidth!,
-        onReSizeFunc: (final image) {
-          imageInfo = imageInfo.copyWith(
-            height: image.height.toDouble(),
-            width: image.width.toDouble(),
-          );
-        },
-      );
-    } else {
-      await handelImageProvider(
-        onSizeFunc: (final imageDescriptor) {
-          imageInfo = imageInfo.copyWith(
-            height: imageDescriptor.height.toDouble(),
-            width: imageDescriptor.width.toDouble(),
-          );
-        },
-      );
-    }
+    if (response.statusCode == 404) throw response.body;
 
-    if (imageInfo.width == null) return;
+    imageInfo = imageInfo.copyWith(imageBytes: response.bodyBytes);
 
-    addImageToCache();
+    await handelImageProvider(
+      targetWidth: providerArguments.targetWidth,
+      targetHeight: providerArguments.targetHeight,
+      onSizeFunc: (final height, final width) {
+        imageInfo = imageInfo.copyWith(height: height, width: width);
+        addImageToCache();
+      },
+    );
   }
 }

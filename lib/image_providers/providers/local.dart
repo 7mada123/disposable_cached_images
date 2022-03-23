@@ -1,7 +1,9 @@
 part of disposable_cached_images;
 
 final _localImageProvider = StateNotifierProvider.autoDispose.family<
-    ImageCacheProviderInterface, _ImageProviderState, ImageProviderArguments>((
+    _ImageCacheProviderInterface,
+    _ImageProviderState,
+    _ImageProviderArguments>((
   final ref,
   final providerArguments,
 ) {
@@ -13,10 +15,10 @@ final _localImageProvider = StateNotifierProvider.autoDispose.family<
   );
 });
 
-class _LocalImageProvider extends ImageCacheProviderInterface {
+class _LocalImageProvider extends _ImageCacheProviderInterface {
   _LocalImageProvider(
     final Reader read,
-    final ImageProviderArguments providerArguments,
+    final _ImageProviderArguments providerArguments,
   ) : super(
           read: read,
           providerArguments: providerArguments,
@@ -25,17 +27,16 @@ class _LocalImageProvider extends ImageCacheProviderInterface {
   @override
   Future<void> getImage() async {
     try {
-      final bytes = await read(imageDataBaseProvider).getBytesFormAssets(
+      final bytes = await read(imageDataBaseProvider).getLocalBytes(
         providerArguments.image,
       );
 
       imageInfo = imageInfo.copyWith(imageBytes: bytes);
 
       await handelImageProvider(
-        onSizeFunc: (final descriptor) => imageInfo = imageInfo.copyWith(
-          height: descriptor.height.toDouble(),
-          width: descriptor.width.toDouble(),
-        ),
+        onSizeFunc: (final height, final width) {
+          imageInfo = imageInfo.copyWith(height: height, width: width);
+        },
       );
     } catch (e) {
       onImageError(e);
