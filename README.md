@@ -1,32 +1,8 @@
-<!--
-
-This README describes the package. If you publish this package to pub.dev,
-
-this README's contents appear on the landing page for your package.
-
-
-
-For information about how to write a good package README, see the guide for
-
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages).
-
-
-
-For general information about developing packages, see the Dart guide for
-
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-
-and the Flutter guide for
-
-[developing packages and plugins](https://flutter.dev/developing-packages).
-
--->
-
 A flutter package for downloading, caching, displaying and releasing images from memory.
 
 ## Features
 
-Display images from assets and/or the Internet.
+Display images from the Internet and/or local files (assets and device storage).
 
 Caching images in the cache directory.
 
@@ -60,61 +36,50 @@ Use `DisposableCachedImage` named constructors to display images.
 DisposableCachedImage.network(imageUrl: 'https://picsum.photos/id/23/200/300');
 ```
 
-##### Obtaining an image from assets using path
+##### Obtaining a local image from assets or device storage using path
 
 ```dart
 DisposableCachedImage.assets(imagePath: 'images/a_dot_burr.jpeg');
 ```
 
-##### Obtaining an image from a URL with dynamic height 
+##### Display dynamic height images
+
+If you are using dynamic height images, you should declare this as shown below to avoid UI jumping
 
 ```dart
-DisposableCachedImage.dynamicHeight(
-  imageUrl: 'https://picsum.photos/id/23/200/300',
-  // Provide the width of the widget so that the height can be calculated accordingly
-  imageWidth: MediaQuery.of(context).size.width * 0.5,
-);
+DisposableCachedImage.network(
+  imageUrl: imageUrl,
+  isDynamicHeight: true,
+  width: MediaQuery.of(context).size.width * 0.3,
+),
 ```
 
-______
+> `width` required when displaying dynamic height images
+
+---
 
 You can display your custom widgets while the image is loading, has an error and when it is ready as shown below
 
 ```dart
 DisposableCachedImage.network(
- imageUrl: imageUrl,
- onLoading: (context) => const Center(
-   child: Icon(Icons.downloading),
- ),
- onError: (context, error, reDownload) => Center(
-   child: IconButton(
-     onPressed: reDownload,
-     icon: const Icon(Icons.download),
-   ),
- ),
- onImage: (context, memoryImage) => Container(
-   decoration: BoxDecoration(
-     borderRadius: BorderRadius.circular(20),
-     image: DecorationImage(
-       image: memoryImage,
-       fit: BoxFit.cover,
-     ),
-   ),
- ),
+  imageUrl: 'https://picsum.photos/id/23/200/300',
+  onLoading: (context) => const Center(
+    child: Icon(Icons.downloading),
+  ),
+  onError: (context, error, stackTrace, retryCall) => Center(
+    child: IconButton(
+      onPressed: retryCall,
+      icon: const Icon(Icons.download),
+    ),
+  ),
+  onImage: (context, imageWidget, height, width) => Stack(
+    children: [
+      imageWidget,
+      MyWidget(),
+    ],
+  ),
 );
 ```
-
-You can Provide a maximum width value for the image by passing the it to `maxCacheWidth` argument, If the actual width of the image is less than the provided value, the provided value will be ignored.
-
-The image will be resized before it's displayed in the UI and saved to the device storage.
-
-```dart
-DisposableCachedImageWidget(
- image: imageUrl,
- maxCacheWidth: 300,
-);
-```
-> Animated images will not be resized due to animation loss issue.
 
 #### Caching images on the web
 
@@ -122,21 +87,60 @@ If you want to enable web caching, you must declare it in `runAppWithDisposableC
 
 ```dart
 runAppWithDisposableCachedImage(
-  const MyApp(),  
+  const MyApp(),
   // enable Web cache, default false
   enableWebCache: true,
 );
 ```
 
-> In both cases the images will be saved in memory as variables, and the web storage cache should not be enabled if your application uses many images because of the local storage size limit.
+> In both cases the images will be saved in memory as variables, and the web local storage cache should not be enabled if your application uses many images because of the local storage size limit.
 
-#### Remove all cached images
+#### Clipping
+
+You can clip the image either with rounded corners by providing [`BorderRadius`](https://api.flutter.dev/flutter/painting/BorderRadius-class.html)
+
+```dart
+DisposableCachedImage.network(
+  imageUrl: imageUrl,
+  borderRadius: const BorderRadius.all(Radius.circular(20)),
+),
+```
+
+Or by setting [`BoxShape`](https://api.flutter-io.cn/flutter/painting/BoxShape.html) to get oval image
+
+```dart
+DisposableCachedImage.network(
+  imageUrl: imageUrl,
+  shape: BoxShape.circle,
+),
+```
+
+#### Keeping images alive
+
+By default each image is removed from memory when it is not being used by any widget, however you can keep some images in memory for the entire application lifecycle as shown below
+
+```dart
+DisposableCachedImage.network(
+  imageUrl: imageUrl,
+  keepAlive: true,
+),
+```
+
+---
+
+> The other arguments are similar if not quite the same as [Image Widget](https://api.flutter.dev/flutter/widgets/Image-class.html)
+
+---
+
+#### Remove all cached images from the device storage
 
 ```dart
 DisposableCachedImage.clearCache();
 ```
 
 ## How it works
+
+The package uses [RawImage](https://api.flutter.dev/flutter/widgets/RawImage-class.html) with [dart-ui-Image](https://api.flutter.dev/flutter/dart-ui/Image-class.html) directly without the need for [ImageProvider](https://api.flutter.dev/flutter/painting/ImageProvider-class.html)
 
 Stores and retrieves files using [localStorage](https://api.flutter.dev/flutter/dart-html/Window/localStorage.html) on web and [dart:io](https://api.flutter.dev/flutter/dart-io/dart-io-library.html) on other platforms.
 
