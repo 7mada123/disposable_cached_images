@@ -1,12 +1,109 @@
 part of disposable_cached_images;
 
 class DisposableCachedImage extends ConsumerStatefulWidget {
-  /// Provide a maximum value for image width,
-  /// If the actual width of the image is less than the provided value,
-  /// the provided value will be ignored.
+  /// Create a widget that displays image from the network and
+  /// cache it in cache directory.
+  ///
+  /// Either the [width] and [height] arguments should be specified, or the
+  /// widget should be placed in a context that sets tight layout constraints.
+  /// Otherwise, the image dimensions will change as the image is loaded, which
+  /// will result in ugly layout changes.
+
+  DisposableCachedImage.network({
+    this.keepAlive = false,
+    required final String imageUrl,
+    final Map<String, String>? headers,
+    this.targetWidth,
+    this.targetHeight,
+    this.fit,
+    this.scale = 1.0,
+    this.addRepaintBoundaries = true,
+    this.onImage,
+    this.shape = BoxShape.rectangle,
+    this.color,
+    this.alignment = Alignment.center,
+    this.onLoading,
+    this.isAntiAlias = false,
+    this.invertColors = false,
+    this.height,
+    this.colorBlendMode,
+    this.isDynamicHeight = false,
+    this.matchTextDirection = false,
+    this.borderRadius,
+    this.width,
+    this.repeat = ImageRepeat.noRepeat,
+    this.filterQuality = FilterQuality.none,
+    this.onError,
+    this.fadeDuration = const Duration(milliseconds: 500),
+    Key? key,
+  })  : assert(
+          !isDynamicHeight || width != null,
+          'Image width must be specified for dynamic size',
+        ),
+        _provider = _networkImageProvider(
+          _ImageProviderArguments(
+            image: imageUrl,
+            targetWidth: targetWidth,
+            targetHeight: targetHeight,
+            keepAlive: keepAlive,
+            headers: headers,
+          ),
+        ),
+        super(key: key);
+
+  /// Create a widget that displays a local image either from a file
+  /// or from an asset by providing the image path.
+  ///
+  /// Either the [width] and [height] arguments should be specified, or the
+  /// widget should be placed in a context that sets tight layout constraints.
+  /// Otherwise, the image dimensions will change as the image is loaded, which
+  /// will result in ugly layout changes.
+  DisposableCachedImage.local({
+    required final String imagePath,
+    this.keepAlive = false,
+    this.fit,
+    this.fadeDuration = const Duration(milliseconds: 500),
+    this.onLoading,
+    this.onError,
+    this.scale = 1.0,
+    this.height,
+    this.colorBlendMode,
+    this.color,
+    this.shape = BoxShape.rectangle,
+    this.alignment = Alignment.center,
+    this.addRepaintBoundaries = true,
+    this.filterQuality = FilterQuality.none,
+    this.width,
+    this.onImage,
+    this.repeat = ImageRepeat.noRepeat,
+    this.isAntiAlias = false,
+    this.invertColors = false,
+    this.isDynamicHeight = false,
+    this.matchTextDirection = false,
+    this.borderRadius,
+    final Key? key,
+  })  : assert(
+          !isDynamicHeight || width != null,
+          'Image width must be specified for dynamic height images',
+        ),
+        targetWidth = null,
+        targetHeight = null,
+        _provider = _localImageProvider(
+          _ImageProviderArguments(image: imagePath, keepAlive: keepAlive),
+        ),
+        super(key: key);
+
+  /// Image resize
+  ///
+  /// If only one of targetWidth or targetHeight are specified,
+  /// the other dimension will be scaled according to the aspect ratio of
+  /// the supplied dimension.
+
+  /// If either targetWidth or targetHeight is less than or equal to zero,
+  /// it will be treated as if it is null.
   ///
   /// The image will be resized before it is saved to the device storage
-  final int? maxCacheWidth;
+  final int? targetHeight, targetWidth;
 
   /// How to inscribe the image into the space allocated during layout.
   ///
@@ -19,7 +116,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
 
   /// A widget to display when loading the image,
   /// downloading the image or getting it from device storage
-  final WidgetBuilder? onLoading;
+  final OnLoading? onLoading;
 
   /// A widget to display when an error occurs
   final OnError? onError;
@@ -66,7 +163,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
   /// isDynamicSize: true,
   /// width: MediaQuery.of(context).size.width * 0.4,
   /// ```
-  final bool isDynamicSize;
+  final bool isDynamicHeight;
 
   /// How to align the image within its bounds.
   ///
@@ -149,93 +246,6 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
   ///  * [BlendMode], which includes an illustration of the effect of each blend mode.
   final BlendMode? colorBlendMode;
 
-  /// Create a widget that displays image from the network and
-  /// cache it in cache directory.
-  ///
-  /// Either the [width] and [height] arguments should be specified, or the
-  /// widget should be placed in a context that sets tight layout constraints.
-  /// Otherwise, the image dimensions will change as the image is loaded, which
-  /// will result in ugly layout changes.
-
-  DisposableCachedImage.network({
-    this.keepAlive = false,
-    required final String imageUrl,
-    this.maxCacheWidth,
-    this.fit,
-    this.scale = 1.0,
-    this.addRepaintBoundaries = true,
-    this.onImage,
-    this.shape = BoxShape.rectangle,
-    this.color,
-    this.alignment = Alignment.center,
-    this.onLoading,
-    this.isAntiAlias = false,
-    this.invertColors = false,
-    this.height,
-    this.colorBlendMode,
-    this.isDynamicSize = false,
-    this.matchTextDirection = false,
-    this.borderRadius,
-    this.width,
-    this.repeat = ImageRepeat.noRepeat,
-    this.filterQuality = FilterQuality.none,
-    this.onError,
-    this.fadeDuration = const Duration(milliseconds: 500),
-    Key? key,
-  })  : assert(
-          !isDynamicSize || width != null,
-          'Image width must be specified for dynamic size',
-        ),
-        _provider = _networkImageProvider(
-          ImageProviderArguments(
-            image: imageUrl,
-            targetWidth: maxCacheWidth,
-            keepAlive: keepAlive,
-          ),
-        ),
-        super(key: key);
-
-  /// Create a widget that displays a local image either from a file
-  /// or from an asset by providing the image path.
-  ///
-  /// Either the [width] and [height] arguments should be specified, or the
-  /// widget should be placed in a context that sets tight layout constraints.
-  /// Otherwise, the image dimensions will change as the image is loaded, which
-  /// will result in ugly layout changes.
-  DisposableCachedImage.local({
-    required final String imagePath,
-    this.keepAlive = false,
-    this.fit,
-    this.fadeDuration = const Duration(milliseconds: 500),
-    this.onLoading,
-    this.onError,
-    this.scale = 1.0,
-    this.height,
-    this.colorBlendMode,
-    this.color,
-    this.shape = BoxShape.rectangle,
-    this.alignment = Alignment.center,
-    this.addRepaintBoundaries = true,
-    this.filterQuality = FilterQuality.none,
-    this.width,
-    this.onImage,
-    this.repeat = ImageRepeat.noRepeat,
-    this.isAntiAlias = false,
-    this.invertColors = false,
-    this.isDynamicSize = false,
-    this.matchTextDirection = false,
-    this.borderRadius,
-    final Key? key,
-  })  : assert(
-          !isDynamicSize || width != null,
-          'Image width must be specified for dynamic height images',
-        ),
-        maxCacheWidth = null,
-        _provider = _localImageProvider(
-          ImageProviderArguments(image: imagePath, keepAlive: keepAlive),
-        ),
-        super(key: key);
-
   final DisposableImageProvider _provider;
 
   /// Remove all cached images form device storage.
@@ -257,7 +267,8 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
     fadeAnimationController = AnimationController(
       vsync: this,
       duration: widget.fadeDuration,
-      value: ref.read(widget._provider).uiImage == null ? 0.0 : 1.0,
+      value: 1.0,
+      // value: ref.read(widget._provider).uiImage == null ? 0.0 : 1.0,
     );
     super.initState();
   }
@@ -275,9 +286,15 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
     if (providerState.isLoading) {
       Widget loading = const SizedBox();
 
-      if (widget.onLoading != null) loading = widget.onLoading!(context);
+      if (widget.onLoading != null) {
+        loading = widget.onLoading!(
+          context,
+          providerState.height,
+          providerState.width,
+        );
+      }
 
-      if (widget.isDynamicSize) {
+      if (widget.isDynamicHeight) {
         loading = SizedBox(
           height: _getDynamicHeight(
             targetWidth: widget.width!,
@@ -309,7 +326,7 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
 
     fadeAnimationController.forward();
 
-    Widget image = _RawImage(
+    final imageWidget = _RawImage(
       key: widget.key,
       opacity: fadeAnimationController,
       image: providerState.uiImage!,
@@ -317,6 +334,7 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
       matchTextDirection: widget.matchTextDirection,
       repeat: widget.repeat,
       scale: widget.scale,
+      addRepaintBoundary: widget.addRepaintBoundaries,
       color: widget.color,
       colorBlendMode: widget.colorBlendMode,
       isAntiAlias: widget.isAntiAlias,
@@ -325,8 +343,8 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
       alignment: widget.alignment,
       width: widget.width,
       shape: widget.shape,
-      fit: widget.isDynamicSize ? BoxFit.fitHeight : widget.fit,
-      height: widget.isDynamicSize
+      fit: widget.isDynamicHeight ? BoxFit.fitHeight : widget.fit,
+      height: widget.isDynamicHeight
           ? _getDynamicHeight(
               targetWidth: widget.width!,
               width: providerState.width,
@@ -335,18 +353,16 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
           : widget.height,
     );
 
-    if (widget.addRepaintBoundaries) image = RepaintBoundary(child: image);
-
     if (widget.onImage != null) {
       return widget.onImage!(
         context,
-        image,
+        imageWidget,
         providerState.height,
         providerState.width,
       );
     }
 
-    return image;
+    return imageWidget;
   }
 
   static double? _getDynamicHeight({
@@ -360,16 +376,25 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
   }
 }
 
-typedef OnError = Widget Function(
-  BuildContext context,
-  Object error,
-  StackTrace stackTrace,
-  VoidCallback? reDownload,
-);
-
+/// Builder function to handel the image widget
 typedef OnImage = Widget Function(
   BuildContext context,
   Widget imageWidget,
   double? height,
   double? width,
+);
+
+/// Builder function to create a placeholder widget while the image is loading
+typedef OnLoading = Widget Function(
+  BuildContext context,
+  double? height,
+  double? width,
+);
+
+/// Builder function to create an error widget
+typedef OnError = Widget Function(
+  BuildContext context,
+  Object error,
+  StackTrace stackTrace,
+  VoidCallback retryCall,
 );
