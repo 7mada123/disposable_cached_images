@@ -3,6 +3,9 @@ part of disposable_cached_images;
 /// [RawImage] with [BorderRadius] and [BoxShape]
 class _RawImage extends RawImage {
   const _RawImage({
+    required final this.addRepaintBoundary,
+    required final this.shape,
+    final this.borderRadius,
     required final ui.Image image,
     required final AlignmentGeometry alignment,
     required final FilterQuality filterQuality,
@@ -12,8 +15,6 @@ class _RawImage extends RawImage {
     required final bool isAntiAlias,
     required final bool matchTextDirection,
     required final Animation<double> opacity,
-    required final this.shape,
-    final this.borderRadius,
     final double? height,
     final double? width,
     final BoxFit? fit,
@@ -40,6 +41,7 @@ class _RawImage extends RawImage {
 
   final BorderRadius? borderRadius;
   final BoxShape shape;
+  final bool addRepaintBoundary;
 
   @override
   RenderImage createRenderObject(final BuildContext context) {
@@ -74,6 +76,7 @@ class _RawImage extends RawImage {
       invertColors: invertColors,
       isAntiAlias: isAntiAlias,
       filterQuality: filterQuality,
+      addRepaintBoundary: addRepaintBoundary,
     );
   }
 
@@ -95,9 +98,12 @@ class _RenderImage extends RenderImage {
   BorderRadius? borderRadius;
   BoxShape shape;
 
+  final bool addRepaintBoundary;
+
   _RenderImage({
     required this.borderRadius,
     required this.shape,
+    required this.addRepaintBoundary,
     required final ui.Image image,
     final double? width,
     final double? height,
@@ -143,6 +149,9 @@ class _RenderImage extends RenderImage {
 
     super.paint(context, offset);
   }
+
+  @override
+  bool get isRepaintBoundary => addRepaintBoundary;
 
   static Path ovalPAth(final Offset offset, final Size size) {
     final rect = offset & size;
