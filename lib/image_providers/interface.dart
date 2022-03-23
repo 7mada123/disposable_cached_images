@@ -72,15 +72,9 @@ abstract class _ImageCacheProviderInterface
         targetHeight: targetHeight,
       );
 
-      if (codec.frameCount > 1) {
-        descriptor.dispose();
-        return _handelAnimatedImage(codec, onSizeFunc: onSizeFunc);
-      }
-
       final frameInfo = await codec.getNextFrame();
 
       descriptor.dispose();
-      codec.dispose();
 
       if (onSizeFunc != null) {
         onSizeFunc(
@@ -90,9 +84,19 @@ abstract class _ImageCacheProviderInterface
       }
 
       if (!mounted) {
+        codec.dispose();
         frameInfo.image.dispose();
         return;
       }
+
+      if (codec.frameCount > 1) {
+        return _handelAnimatedImage(
+          codec,
+          image: frameInfo.image,
+        );
+      }
+
+      codec.dispose();
 
       state = state.copyWith(
         isLoading: false,
@@ -117,31 +121,25 @@ abstract class _ImageCacheProviderInterface
 
   Future<void> _handelAnimatedImage(
     final ui.Codec codec, {
-    final OnSizeFunc? onSizeFunc,
+    required final ui.Image image,
   }) async {
+    state.uiImage?.dispose();
+
+    state = state.copyWith(uiImage: image, isLoading: false);
+
     final delayed = Stopwatch()..start();
 
     final newFrame = await codec.getNextFrame();
 
-    if (onSizeFunc != null) {
-      onSizeFunc(
-        newFrame.image.height.toDouble(),
-        newFrame.image.width.toDouble(),
-      );
-    }
+    await Future.delayed(newFrame.duration - delayed.elapsed);
 
     if (!mounted) {
       newFrame.image.dispose();
       codec.dispose();
-      delayed.stop();
       return;
     }
 
-    state = state.copyWith(uiImage: newFrame.image, isLoading: false);
-
-    await Future.delayed(newFrame.duration - delayed.elapsed);
-
-    return _handelAnimatedImage(codec);
+    return _handelAnimatedImage(codec, image: newFrame.image);
   }
 
   static Future<ui.ImageDescriptor> _getImageDescriptor(
