@@ -51,7 +51,7 @@ class _ImageDataBase extends ImageCacheManger {
     await imageBytesFile.create();
 
     await imageBytesFile.writeAsBytes(
-      imageInfo.memoryImage!.bytes,
+      imageInfo.imageBytes!,
       mode: FileMode.writeOnly,
     );
 
@@ -109,5 +109,5 @@ class _ImageDataBase extends ImageCacheManger {
     ioSink = cacheKeysFile.openWrite(mode: FileMode.writeOnlyAppend);
   }
 
-  static bool isContainKey(final String key) => fileContent[key] != null;
+  static bool isContainKey(final String key) => fileContent.containsKey(key);
 }

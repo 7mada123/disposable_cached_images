@@ -6,7 +6,7 @@ import '../image_info_data.dart';
 
 extension ImageSizeFunc on ImageInfoData {
   Future<ImageInfoData> resizeImage(final int targetWidth) async {
-    final decodedImage = await decodeImageFromList(memoryImage!.bytes);
+    final decodedImage = await decodeImageFromList(imageBytes!);
 
     if (decodedImage.width <= targetWidth) {
       final imageInfo = copyWith(
@@ -20,7 +20,7 @@ extension ImageSizeFunc on ImageInfoData {
     }
 
     final codec = await instantiateImageCodec(
-      memoryImage!.bytes,
+      imageBytes!,
       targetWidth: targetWidth,
     );
 
@@ -50,7 +50,7 @@ extension ImageSizeFunc on ImageInfoData {
     );
 
     final imageInfo = copyWith(
-      memoryImage: MemoryImage(rezizedByteData!.buffer.asUint8List()),
+      imageBytes: rezizedByteData!.buffer.asUint8List(),
       height: targetUiImage.height.toDouble(),
       width: targetUiImage.width.toDouble(),
     );
@@ -61,7 +61,7 @@ extension ImageSizeFunc on ImageInfoData {
   }
 
   Future<ImageInfoData> setImageSize() async {
-    final decodedImage = await decodeImageFromList(memoryImage!.bytes);
+    final decodedImage = await decodeImageFromList(imageBytes!);
 
     final imageInfo = copyWith(
       height: decodedImage.height.toDouble(),

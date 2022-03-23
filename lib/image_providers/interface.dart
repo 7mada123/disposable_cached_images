@@ -3,15 +3,15 @@ part of disposable_cached_images;
 abstract class ImageCacheProviderInterface
     extends StateNotifier<_ImageProviderState> {
   final Reader read;
-  final String image;
-  final void Function(MemoryImage? memoryImage) onMemoryImage;
+  final ImageProviderArguments providerArguments;
+  final String key;
 
   ImageCacheProviderInterface({
     required final this.read,
-    required final this.image,
-    required final this.onMemoryImage,
-  }) : super(const _ImageProviderState()) {
-    final usedImageInfo = read(_usedImageProvider).getImageInfo(image.key);
+    required final this.providerArguments,
+  })  : key = getImageKey(providerArguments.image),
+        super(const _ImageProviderState()) {
+    final usedImageInfo = read(_usedImageProvider).getImageInfo(key);
 
     if (usedImageInfo != null) {
       imageInfo = usedImageInfo;
@@ -24,13 +24,11 @@ abstract class ImageCacheProviderInterface
 
       handelImageProvider();
     } else {
-      final savedImageInfo = read(imageDataBaseProvider).getImageInfo(
-        image.key,
-      );
+      final savedImageInfo = read(imageDataBaseProvider).getImageInfo(key);
 
       if (savedImageInfo == null) {
         state = state.copyWith(isLoading: true);
-        imageInfo = ImageInfoData.init(image.key);
+        imageInfo = ImageInfoData.init(key);
       } else {
         state = state.copyWith(
           isLoading: true,
@@ -59,31 +57,45 @@ abstract class ImageCacheProviderInterface
     );
   }
 
-  Future<void> handelImageProvider() async {
+  Future<void> handelImageProvider({
+    final int? targetWidth,
+    final SetSizeFunc? onSizeFunc,
+    final SetRezieSizeFunc? onReSizeFunc,
+  }) async {
     read(_usedImageProvider).add(imageInfo);
 
     try {
-      onMemoryImage(imageInfo.memoryImage!);
+      final descriptor = await _getImageDescriptor(imageInfo.imageBytes!);
 
-      if (!mounted) return;
+      if (onSizeFunc != null) onSizeFunc(descriptor);
 
-      await preCache(imageInfo);
+      final codec = await descriptor.instantiateCodec(targetWidth: targetWidth);
+
+      if (codec.frameCount > 1) {
+        descriptor.dispose();
+        return _handelAnimatedImage(codec);
+      }
+
+      final frameInfo = await codec.getNextFrame();
+
+      descriptor.dispose();
+      codec.dispose();
+
+      if (onReSizeFunc != null) onReSizeFunc(frameInfo.image);
 
       if (!mounted) {
-        imageInfo.memoryImage!.evict();
+        frameInfo.image.dispose();
         return;
       }
 
       state = state.copyWith(
         isLoading: false,
-        imageProvider: imageInfo.memoryImage,
+        uiImage: frameInfo.image,
         height: imageInfo.height,
         width: imageInfo.width,
       );
     } catch (e) {
       onImageError(e);
-
-      imageInfo.memoryImage!.evict();
     }
   }
 
@@ -91,47 +103,54 @@ abstract class ImageCacheProviderInterface
     return read(imageDataBaseProvider).addNew(imageInfo);
   }
 
-  static Future<void> preCache(final ImageInfoData imageInfo) async {
-    final completer = Completer<void>();
-
-    final stream = imageInfo.memoryImage!.resolve(ImageConfiguration.empty);
-
-    late final ImageStreamListener listener;
-
-    listener = ImageStreamListener(
-      (final image, final synchronousCall) {
-        if (!completer.isCompleted) completer.complete();
-
-        stream.removeListener(listener);
-      },
-      onError: (final exception, final stackTrace) {
-        if (!completer.isCompleted) {
-          completer.completeError(
-            exception,
-            stackTrace,
-          );
-        }
-
-        stream.removeListener(listener);
-      },
-    );
-
-    stream.addListener(listener);
-
-    return completer.future;
+  @override
+  void dispose() {
+    state.uiImage?.dispose();
+    super.dispose();
   }
-}
 
-extension on String {
+  Future<void> _handelAnimatedImage(final ui.Codec codec) async {
+    final delayed = Stopwatch()..start();
+
+    final newFrame = await codec.getNextFrame();
+
+    if (!mounted) {
+      newFrame.image.dispose();
+      codec.dispose();
+      delayed.stop();
+      return;
+    }
+
+    state = state.copyWith(uiImage: newFrame.image, isLoading: false);
+
+    await Future.delayed(newFrame.duration - delayed.elapsed);
+
+    return _handelAnimatedImage(codec);
+  }
+
+  static Future<ui.ImageDescriptor> _getImageDescriptor(
+    final Uint8List bytes,
+  ) async {
+    final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
+
+    final descriptor = await ui.ImageDescriptor.encoded(buffer);
+
+    buffer.dispose();
+
+    return descriptor;
+  }
+
   static final illegalFilenameCharacters = RegExp(r'[/#<>$+%!`&*|{}?"=\\ @:]');
 
-  String get key {
-    return substring(
-      0,
-      length > 255 ? 255 : length,
-    ).replaceAll(illegalFilenameCharacters, '');
+  static String getImageKey(final String image) {
+    return image
+        .substring(0, image.length > 255 ? 255 : image.length)
+        .replaceAll(illegalFilenameCharacters, '');
   }
 }
 
 typedef DisposableImageProvider = AutoDisposeStateNotifierProvider<
     ImageCacheProviderInterface, _ImageProviderState>;
+
+typedef SetSizeFunc = void Function(ui.ImageDescriptor descriptor);
+typedef SetRezieSizeFunc = void Function(ui.Image image);

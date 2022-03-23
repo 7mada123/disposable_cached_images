@@ -1,13 +1,11 @@
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
-
 import '../image_info_data.dart';
 
 extension ImageSizeFunc on ImageInfoData {
   Future<ImageInfoData> resizeImage(final int targetWidth) async {
-    final imageDescriptor = await _getImageDescriptor(memoryImage!.bytes);
+    final imageDescriptor = await _getImageDescriptor(imageBytes!);
 
     if (imageDescriptor.width <= targetWidth) {
       final imageInfo = copyWith(
@@ -49,7 +47,7 @@ extension ImageSizeFunc on ImageInfoData {
     );
 
     final imageInfo = copyWith(
-      memoryImage: MemoryImage(rezizedByteData!.buffer.asUint8List()),
+      imageBytes: rezizedByteData!.buffer.asUint8List(),
       height: targetUiImage.height.toDouble(),
       width: targetUiImage.width.toDouble(),
     );
@@ -60,7 +58,7 @@ extension ImageSizeFunc on ImageInfoData {
   }
 
   Future<ImageInfoData> setImageSize() async {
-    final imageDescriptor = await _getImageDescriptor(memoryImage!.bytes);
+    final imageDescriptor = await _getImageDescriptor(imageBytes!);
 
     final imageInfo = copyWith(
       height: imageDescriptor.height.toDouble(),

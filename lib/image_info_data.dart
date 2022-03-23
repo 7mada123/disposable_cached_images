@@ -1,42 +1,42 @@
-import 'package:flutter/material.dart';
+import 'dart:typed_data';
 
 /// A class to handle the necessary image data
 class ImageInfoData {
   final double? width;
   final double? height;
   final String key;
-  final MemoryImage? memoryImage;
+  final Uint8List? imageBytes;
 
   const ImageInfoData({
     required final this.width,
     required final this.height,
     required final this.key,
-    final this.memoryImage,
+    final this.imageBytes,
   });
 
   ImageInfoData copyWith({
     final double? width,
     final double? height,
     final String? key,
-    final MemoryImage? memoryImage,
+    final Uint8List? imageBytes,
   }) {
     return ImageInfoData(
       width: width ?? this.width,
       height: height ?? this.height,
       key: key ?? this.key,
-      memoryImage: memoryImage ?? this.memoryImage,
+      imageBytes: imageBytes ?? this.imageBytes,
     );
   }
 
   ImageInfoData.init(final this.key)
       : height = null,
         width = null,
-        memoryImage = null;
+        imageBytes = null;
 
-  Map<String, double?> sizeToMap() {
+  Map<String, double> sizeToMap() {
     return {
-      'width': width,
-      'height': height,
+      'width': width!,
+      'height': height!,
     };
   }
 
@@ -59,7 +59,7 @@ class ImageInfoData {
         other.width == width &&
         other.height == height &&
         other.key == key &&
-        other.memoryImage == memoryImage;
+        other.imageBytes == imageBytes;
   }
 
   @override
@@ -67,6 +67,6 @@ class ImageInfoData {
     return width.hashCode ^
         height.hashCode ^
         key.hashCode ^
-        memoryImage.hashCode;
+        imageBytes.hashCode;
   }
 }

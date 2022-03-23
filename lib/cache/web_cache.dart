@@ -51,7 +51,7 @@ class _WebImageDataBase extends ImageCacheManger {
 
   @override
   Future<void> addNew(final ImageInfoData imageInfo) async {
-    if (_disableWebCache || fileContent[imageInfo.key] != null) return;
+    if (_disableWebCache || fileContent.containsKey(imageInfo.key)) return;
 
     fileContent.putIfAbsent(imageInfo.key, () => imageInfo.sizeToMap());
 
@@ -126,7 +126,7 @@ class _WebImageDataBase extends ImageCacheManger {
       caches.putIfAbsent(
         key,
         () => json.encode({
-          'bytes': imageInfo.memoryImage!.bytes.toList(),
+          'bytes': imageInfo.imageBytes!.toList(),
           'time': DateTime.now().millisecondsSinceEpoch,
         }),
       );
