@@ -36,7 +36,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.filterQuality = FilterQuality.none,
     this.onError,
     this.fadeDuration = const Duration(milliseconds: 300),
-    Key? key,
+    final Key? key,
   })  : assert(
           !isDynamicHeight || width != null,
           'Image width must be specified for dynamic size',

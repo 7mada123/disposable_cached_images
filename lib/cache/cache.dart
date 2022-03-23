@@ -59,7 +59,7 @@ class _ImageDataBase extends ImageCacheManger {
   }
 
   @override
-  ImageInfoData? getImageInfo(String key) {
+  ImageInfoData? getImageInfo(final String key) {
     final data = fileContent[key];
 
     if (data == null) return null;

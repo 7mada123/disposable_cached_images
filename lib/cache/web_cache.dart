@@ -44,9 +44,11 @@ class _WebImageDataBase extends ImageCacheManger {
       json.decode(_sortedWebKeys.join().replaceAll('}{', ',')),
     );
 
-    _sortedWebKeys.sort((a, b) => (json.decode(caches[a]!)['time']).compareTo(
-          json.decode(caches[b]!)['time'],
-        ));
+    _sortedWebKeys.sort((final a, final b) {
+      return (json.decode(caches[a]!)['time']).compareTo(
+        json.decode(caches[b]!)['time'],
+      );
+    });
   }
 
   @override
@@ -75,7 +77,7 @@ class _WebImageDataBase extends ImageCacheManger {
   }
 
   @override
-  Future<Uint8List?> getBytes(String key) async {
+  Future<Uint8List?> getBytes(final String key) async {
     final imageInfo = getImageInfo(key);
 
     if (imageInfo == null) return null;
@@ -86,7 +88,7 @@ class _WebImageDataBase extends ImageCacheManger {
   }
 
   @override
-  Future<Uint8List> getLocalBytes(String imagePath) async {
+  Future<Uint8List> getLocalBytes(final String imagePath) async {
     final byteData = await rootBundle.load(imagePath);
     return byteData.buffer.asUint8List();
   }
