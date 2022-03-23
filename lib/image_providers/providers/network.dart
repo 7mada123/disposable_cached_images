@@ -87,7 +87,7 @@ class _NetworkImageProvider extends _ImageCacheProviderInterface {
 
     httpClient.close();
 
-    if (response.statusCode == 404) throw response.body;
+    if (response.statusCode == 404) throw Exception('Image not found');
 
     imageInfo = imageInfo.copyWith(imageBytes: response.bodyBytes);
 
