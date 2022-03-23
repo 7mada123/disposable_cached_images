@@ -23,29 +23,19 @@ abstract class _ImageCacheProviderInterface
       );
 
       handelImageProvider();
-    } else {
-      final savedImageInfo = read(imageDataBaseProvider).getImageInfo(key);
 
-      if (savedImageInfo == null) {
-        state = state.copyWith(isLoading: true);
-        imageInfo = ImageInfoData.init(key);
-      } else {
-        state = state.copyWith(
-          isLoading: true,
-          height: savedImageInfo.height,
-          width: savedImageInfo.width,
-        );
-
-        imageInfo = savedImageInfo;
-      }
-
-      getImage();
+      return;
     }
+
+    getImage();
   }
 
   late ImageInfoData imageInfo;
 
-  Future<void> getImage();
+  @mustCallSuper
+  Future<void> getImage() async {
+    read(_usedImageProvider).add(imageInfo);
+  }
 
   void onImageError(final Object e) {
     if (!mounted) return;
@@ -62,8 +52,6 @@ abstract class _ImageCacheProviderInterface
     final int? targetHeight,
     final OnSizeFunc? onSizeFunc,
   }) async {
-    read(_usedImageProvider).add(imageInfo);
-
     try {
       final descriptor = await _getImageDescriptor(imageInfo.imageBytes!);
 
@@ -107,10 +95,6 @@ abstract class _ImageCacheProviderInterface
     } catch (e) {
       onImageError(e);
     }
-  }
-
-  Future<void> addImageToCache() {
-    return read(imageDataBaseProvider).addNew(imageInfo);
   }
 
   @override

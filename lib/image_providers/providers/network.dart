@@ -35,6 +35,27 @@ class _NetworkImageProvider extends _ImageCacheProviderInterface {
   @override
   Future<void> getImage() async {
     try {
+      final savedImageInfo = read(imageDataBaseProvider).getImageInfo(key);
+
+      if (savedImageInfo == null) {
+        state = state.copyWith(isLoading: true);
+        imageInfo = ImageInfoData.init(key);
+
+        await _handelNetworkImage();
+
+        super.getImage();
+
+        return;
+      }
+
+      state = state.copyWith(
+        isLoading: true,
+        height: savedImageInfo.height,
+        width: savedImageInfo.width,
+      );
+
+      imageInfo = savedImageInfo;
+
       final bytes = await read(imageDataBaseProvider).getBytes(key);
 
       if (bytes != null) {
@@ -44,10 +65,14 @@ class _NetworkImageProvider extends _ImageCacheProviderInterface {
 
         await handelImageProvider();
 
+        super.getImage();
+
         return;
       }
 
       await _handelNetworkImage();
+
+      super.getImage();
     } catch (e) {
       httpClient.close();
       onImageError(e);
@@ -66,12 +91,13 @@ class _NetworkImageProvider extends _ImageCacheProviderInterface {
 
     imageInfo = imageInfo.copyWith(imageBytes: response.bodyBytes);
 
-    await handelImageProvider(
+    return handelImageProvider(
       targetWidth: providerArguments.targetWidth,
       targetHeight: providerArguments.targetHeight,
       onSizeFunc: (final height, final width) {
         imageInfo = imageInfo.copyWith(height: height, width: width);
-        addImageToCache();
+        read(_usedImageProvider).add(imageInfo);
+        read(imageDataBaseProvider).addNew(imageInfo);
       },
     );
   }

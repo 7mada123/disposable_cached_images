@@ -27,6 +27,9 @@ class _LocalImageProvider extends _ImageCacheProviderInterface {
   @override
   Future<void> getImage() async {
     try {
+      state = state.copyWith(isLoading: true);
+      imageInfo = ImageInfoData.init(key);
+
       final bytes = await read(imageDataBaseProvider).getLocalBytes(
         providerArguments.image,
       );
@@ -38,6 +41,8 @@ class _LocalImageProvider extends _ImageCacheProviderInterface {
           imageInfo = imageInfo.copyWith(height: height, width: width);
         },
       );
+
+      super.getImage();
     } catch (e) {
       onImageError(e);
     }
