@@ -28,7 +28,7 @@ abstract class ImageCacheManger {
 
   Future<Uint8List?> getBytes(final String key);
 
-  Future<Uint8List> getBytesFormAssets(final String imagePath);
+  Future<Uint8List> getLocalBytes(final String imagePath);
 
   /// Clear [DisposableCachedImage] storage cache.
   Future<void> clearCache();

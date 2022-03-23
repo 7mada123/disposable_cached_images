@@ -82,12 +82,12 @@ class _ImageDataBase extends ImageCacheManger {
   }
 
   @override
-  Future<Uint8List> getBytesFormAssets(final String imagePath) async {
+  Future<Uint8List> getLocalBytes(final String imagePath) async {
     try {
       return File(imagePath).readAsBytes();
     } catch (e) {
       throw Exception(
-        """Exception has occurred. Unable to load asset image
+        """Exception has occurred. Unable to load image file
         path : $imagePath
         Error : ${e.toString()}""",
       );

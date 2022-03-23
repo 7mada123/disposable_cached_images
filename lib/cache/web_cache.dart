@@ -86,8 +86,8 @@ class _WebImageDataBase extends ImageCacheManger {
   }
 
   @override
-  Future<Uint8List> getBytesFormAssets(String imagePath) async {
-    final byteData = await rootBundle.load('assets/$imagePath');
+  Future<Uint8List> getLocalBytes(String imagePath) async {
+    final byteData = await rootBundle.load(imagePath);
     return byteData.buffer.asUint8List();
   }
 
@@ -101,23 +101,11 @@ class _WebImageDataBase extends ImageCacheManger {
     }
   }
 
+  /// Using RegEx for the key so that we don't accidentally use or remove
+  /// other values not associated with this package
   static final _webKeyReg = RegExp(
     r'{"http(s{0,1}).*?(width":\d+,"height":\d+})}',
   );
-
-  static final List<String> _sortedWebKeys = [];
-
-  static void _removeOld5() {
-    final old5 = _sortedWebKeys.sublist(
-      0,
-      _sortedWebKeys.length > 5 ? 5 : _sortedWebKeys.length,
-    );
-
-    for (final key in old5) {
-      caches.remove(key);
-      _sortedWebKeys.remove(key);
-    }
-  }
 
   static void _add(final ImageInfoData imageInfo) {
     try {
@@ -134,6 +122,22 @@ class _WebImageDataBase extends ImageCacheManger {
       _sortedWebKeys.add(key);
     } catch (e) {
       rethrow;
+    }
+  }
+
+  /// used to remove the old images
+  static final List<String> _sortedWebKeys = [];
+
+  /// Remove the old five images when the local storage reaches the limit
+  static void _removeOld5() {
+    final old5 = _sortedWebKeys.sublist(
+      0,
+      _sortedWebKeys.length > 5 ? 5 : _sortedWebKeys.length,
+    );
+
+    for (final key in old5) {
+      caches.remove(key);
+      _sortedWebKeys.remove(key);
     }
   }
 }
