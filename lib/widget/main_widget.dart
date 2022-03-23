@@ -16,6 +16,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.targetWidth,
     this.targetHeight,
     this.fit,
+    this.centerSlice,
     this.scale = 1.0,
     this.addRepaintBoundaries = true,
     this.onImage,
@@ -34,7 +35,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.repeat = ImageRepeat.noRepeat,
     this.filterQuality = FilterQuality.none,
     this.onError,
-    this.fadeDuration = const Duration(milliseconds: 500),
+    this.fadeDuration = const Duration(milliseconds: 300),
     Key? key,
   })  : assert(
           !isDynamicHeight || width != null,
@@ -62,7 +63,8 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     required final String imagePath,
     this.keepAlive = false,
     this.fit,
-    this.fadeDuration = const Duration(milliseconds: 500),
+    this.centerSlice,
+    this.fadeDuration = const Duration(milliseconds: 300),
     this.onLoading,
     this.onError,
     this.scale = 1.0,
@@ -225,6 +227,15 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
   /// scope.
   final bool matchTextDirection;
 
+  /// The center slice for a nine-patch image.
+  ///
+  /// The region of the image inside the center slice will be stretched both
+  /// horizontally and vertically to fit the image into its destination. The
+  /// region of the image above and below the center slice will be stretched
+  /// only horizontally and the region of the image to the left and right of
+  /// the center slice will be stretched only vertically.
+  final Rect? centerSlice;
+
   /// How to paint any portions of the layout bounds not covered by the image.
   final ImageRepeat repeat;
 
@@ -267,8 +278,7 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
     fadeAnimationController = AnimationController(
       vsync: this,
       duration: widget.fadeDuration,
-      value: 1.0,
-      // value: ref.read(widget._provider).uiImage == null ? 0.0 : 1.0,
+      value: ref.read(widget._provider).uiImage == null ? 0.0 : 1.0,
     );
     super.initState();
   }
@@ -334,6 +344,7 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
       matchTextDirection: widget.matchTextDirection,
       repeat: widget.repeat,
       scale: widget.scale,
+      centerSlice: widget.centerSlice,
       addRepaintBoundary: widget.addRepaintBoundaries,
       color: widget.color,
       colorBlendMode: widget.colorBlendMode,
