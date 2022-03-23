@@ -1,10 +1,12 @@
 ## 1.0.0 stable release
 
+Using `RawImage` with `ui.Image` directly instaded of `MemoryImage`, this improves the overall performance and fixed the issue where sometimes `evcit()` doesn't release the images from memory and some of the images are suddenly removed
+
 Fixed an issue where animated images loss animations when resizing
 
-Fixed an issue where dynamic height images would not resize when providing dynamic width
+Fixed an issue where dynamic height images wouldn't resize correctly when providing dynamic width
 
-Reduce the time required to prefetches an image into the image cache
+---
 
 ### Breaking change
 
@@ -12,7 +14,14 @@ Removed the need for `scaffoldMessengerKey`
 
 Removed `ImageType` in favor of [Named constructors](https://dart.dev/guides/language/language-tour#named-constructors)
 
-The `maxCacheHeight` has been removed, now the image height will be calculated according to the provided `maxCacheWidth`
+`onError` provide `StackTrace`
+
+`onImage` provide the image `Widget` and size. `MemoryImage` provider is removed
+
+---
+
+Update documentation
+Update example
 
 ## 0.1.0
 
