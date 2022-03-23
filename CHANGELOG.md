@@ -1,4 +1,4 @@
-## 1.0.0 stable release
+## 1.0.1 stable release
 
 Using `RawImage` with `ui.Image` directly instaded of `MemoryImage`, this improves the overall performance and fixed the issue where sometimes `evcit()` doesn't release the images from memory and some of the images are suddenly removed
 
