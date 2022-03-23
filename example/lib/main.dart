@@ -40,6 +40,8 @@ class Home extends StatelessWidget {
       ),
       body: GridView.builder(
         padding: const EdgeInsets.all(20),
+        // RepaintBoundaries is enabled by default in DisposableCachedImage widget
+        addRepaintBoundaries: false,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           mainAxisSpacing: 20,
@@ -53,6 +55,6 @@ class Home extends StatelessWidget {
 
   static final images = List.generate(
     500,
-    (final i) => 'https://picsum.photos/id/$i/200/300',
+    (final i) => 'https://picsum.photos/id/$i/800/900',
   );
 }

@@ -18,6 +18,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         body: GridView.builder(
+          // RepaintBoundaries is enabled by default in DisposableCachedImage widget
+          addRepaintBoundaries: false,
           padding: const EdgeInsets.all(20),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
@@ -25,7 +27,7 @@ class MyApp extends StatelessWidget {
             crossAxisSpacing: 20,
           ),
           itemCount: images.length,
-          itemBuilder: (context, index) => DisposableCachedImage.network(imageUrl: imageUrl),
+          itemBuilder: (context, index) => DisposableCachedImage.network(imageUrl: images[index]),
         ),
       ),
     );

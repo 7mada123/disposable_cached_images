@@ -23,10 +23,12 @@ class ImageWidget extends StatelessWidget {
       ),
       child: DisposableCachedImage.network(
         imageUrl: imageUrl,
-        onLoading: (context) => const Center(
+        fit: BoxFit.cover,
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
+        onLoading: (context, height, width) => const Center(
           child: Icon(Icons.downloading),
         ),
-        onError: (context, error, stackTrace, reDownload) => Center(
+        onError: (context, error, stackTrace, retryCall) => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -34,19 +36,10 @@ class ImageWidget extends StatelessWidget {
               Text(error.toString()),
               const SizedBox(height: 10),
               IconButton(
-                onPressed: reDownload,
+                onPressed: retryCall,
                 icon: const Icon(Icons.download),
               ),
             ],
-          ),
-        ),
-        onImage: (context, memoryImage) => Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            image: DecorationImage(
-              image: memoryImage,
-              fit: BoxFit.cover,
-            ),
           ),
         ),
       ),
@@ -68,7 +61,19 @@ class ImageViewScreen extends StatelessWidget {
       appBar: AppBar(),
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: Center(child: ImageWidget(imageUrl: imageUrl)),
+        child: Center(
+          child: DisposableCachedImage.network(
+            imageUrl: imageUrl,
+            fit: BoxFit.fitWidth,
+            shape: BoxShape.circle,
+            onLoading: (context, height, width) => const Center(
+              child: Icon(Icons.downloading),
+            ),
+            onError: (context, error, stackTrace, retryCall) => Text(
+              error.toString(),
+            ),
+          ),
+        ),
       ),
     );
   }
