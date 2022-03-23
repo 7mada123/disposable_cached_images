@@ -24,10 +24,8 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
   /// A widget to display when an error occurs
   final OnError? onError;
 
-  /// A widget for displaying the image by the ImageProvider [MemoryImage]
+  /// A widget for displaying the image
   final OnImage? onImage;
-
-  final DisposableImageProvider _provider;
 
   /// If non-null, require the image to have this width.
   final double? width;
@@ -36,27 +34,119 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
   final double? height;
 
   /// {@macro flutter.widgets.image.filterQualityParameter}
-  /// {@template flutter.widgets.image.filterQualityParameter}
   final FilterQuality filterQuality;
 
-  // TODO
+  /// If non-null, the corners of this image are rounded by this [BorderRadius].
+  ///
+  /// Applies only when shape [BoxShape.rectangle]
   final BorderRadius? borderRadius;
-  // TODO
+
+  /// The image shape.
+  ///
+  /// If this is [BoxShape.circle] then [borderRadius] is ignored.
+  final BoxShape shape;
+
+  /// Creates this widget that isolates repaints.
   final bool addRepaintBoundaries;
 
-  // TODO
-  final bool isDynamicSize;
-
+  /// This should only be enabled for images that must be in memory
+  /// for the entire application lifecycle
   final bool keepAlive;
 
+  /// Display dynamic height image, this must be enabled if you want to display
+  /// dynamic height images to avoid UI jumping.
+  ///
+  /// The [width] argument should be specified to determine the dynamic
+  /// image height, this value should be smaller than the device\widget width
+  /// otherwise you could end up with a white vertical space around the image.
+  ///
+  /// prefer to use [MediaQuery] size if you want to use dynamic width
+  ///
+  /// ```dart
+  /// isDynamicSize: true,
+  /// width: MediaQuery.of(context).size.width * 0.4,
+  /// ```
+  final bool isDynamicSize;
+
+  /// How to align the image within its bounds.
+  ///
+  /// The alignment aligns the given position in the image to the given position
+  /// in the layout bounds. For example, an [Alignment] alignment of (-1.0,
+  /// -1.0) aligns the image to the top-left corner of its layout bounds, while an
+  /// [Alignment] alignment of (1.0, 1.0) aligns the bottom right of the
+  /// image with the bottom right corner of its layout bounds. Similarly, an
+  /// alignment of (0.0, 1.0) aligns the bottom middle of the image with the
+  /// middle of the bottom edge of its layout bounds.
+  ///
+  /// To display a subpart of an image, consider using a [CustomPainter] and
+  /// [Canvas.drawImageRect].
+  ///
+  /// If the [alignment] is [TextDirection]-dependent (i.e. if it is a
+  /// [AlignmentDirectional]), then an ambient [Directionality] widget
+  /// must be in scope.
+  ///
+  /// Defaults to [Alignment.center].
+  ///
+  /// See also:
+  ///
+  ///  * [Alignment], a class with convenient constants typically used to
+  ///    specify an [AlignmentGeometry].
+  ///  * [AlignmentDirectional], like [Alignment] for specifying alignments
+  ///    relative to text direction.
   final AlignmentGeometry alignment;
 
+  /// Whether to paint the image with anti-aliasing.
+  ///
+  /// Anti-aliasing alleviates the sawtooth artifact when the image is rotated.
   final bool isAntiAlias;
+
+  /// Whether the colors of the image are inverted when drawn.
+  ///
+  /// Inverting the colors of an image applies a new color filter to the paint.
+  /// If there is another specified color filter, the invert will be applied
+  /// after it. This is primarily used for implementing smart invert on iOS.
+  ///
+  /// See also:
+  ///
+  ///  * [Paint.invertColors], for the dart:ui implementation.
   final bool invertColors;
+
+  /// Whether to paint the image in the direction of the [TextDirection].
+  ///
+  /// If this is true, then in [TextDirection.ltr] contexts, the image will be
+  /// drawn with its origin in the top left (the "normal" painting direction for
+  /// images); and in [TextDirection.rtl] contexts, the image will be drawn with
+  /// a scaling factor of -1 in the horizontal direction so that the origin is
+  /// in the top right.
+  ///
+  /// This is occasionally used with images in right-to-left environments, for
+  /// images that were designed for left-to-right locales. Be careful, when
+  /// using this, to not flip images with integral shadows, text, or other
+  /// effects that will look incorrect when flipped.
+  ///
+  /// If this is true, there must be an ambient [Directionality] widget in
+  /// scope.
   final bool matchTextDirection;
+
+  /// How to paint any portions of the layout bounds not covered by the image.
   final ImageRepeat repeat;
+
+  /// Specifies the image's scale.
+  ///
+  /// Used when determining the best display size for the image.
   final double scale;
+
+  /// If non-null, this color is blended with each image pixel using [colorBlendMode].
   final Color? color;
+
+  /// Used to combine [color] with this image.
+  ///
+  /// The default is [BlendMode.srcIn]. In terms of the blend mode, [color] is
+  /// the source and this image is the destination.
+  ///
+  /// See also:
+  ///
+  ///  * [BlendMode], which includes an illustration of the effect of each blend mode.
   final BlendMode? colorBlendMode;
 
   /// Create a widget that displays image from the network and
@@ -75,6 +165,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.scale = 1.0,
     this.addRepaintBoundaries = true,
     this.onImage,
+    this.shape = BoxShape.rectangle,
     this.color,
     this.alignment = Alignment.center,
     this.onLoading,
@@ -122,6 +213,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.height,
     this.colorBlendMode,
     this.color,
+    this.shape = BoxShape.rectangle,
     this.alignment = Alignment.center,
     this.addRepaintBoundaries = true,
     this.filterQuality = FilterQuality.none,
@@ -136,7 +228,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     final Key? key,
   })  : assert(
           !isDynamicSize || width != null,
-          'Image width must be specified for dynamic size',
+          'Image width must be specified for dynamic height images',
         ),
         maxCacheWidth = null,
         _provider = _localImageProvider(
@@ -144,19 +236,9 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
         ),
         super(key: key);
 
-  /// [DisposableCachedImage.dynamicHeight] image widget width.
-  /// /// TODO
-  // final double? imageWidth;
+  final DisposableImageProvider _provider;
 
-  /// Creates a widget that displays image from the network with dynamic image
-  /// height and cache it in cache directory.the
-  ///
-  /// The [imageWidth] argument should be specified to determine the dynamic
-  /// image height, this value should be smaller than the device width
-  /// otherwise you could end up with white space around the height of the image.
-  /// prefer to use [MediaQuery] size if you want to use dynamic width
-
-  /// Remove all cached images.
+  /// Remove all cached images form device storage.
   static Future<void> clearCache() {
     return ImageCacheManger.getPlatformInstance().clearCache();
   }
@@ -242,6 +324,7 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
       filterQuality: widget.filterQuality,
       alignment: widget.alignment,
       width: widget.width,
+      shape: widget.shape,
       fit: widget.isDynamicSize ? BoxFit.fitHeight : widget.fit,
       height: widget.isDynamicSize
           ? _getDynamicHeight(
