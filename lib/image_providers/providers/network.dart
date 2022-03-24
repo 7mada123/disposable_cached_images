@@ -182,7 +182,6 @@ class _NetworkImageProvider extends _ImageCacheProviderInterface {
       resizedFrameInfo.image.dispose();
     }
 
-    read(_usedImageProvider).add(imageInfo);
     read(imageDataBaseProvider).addNew(imageInfo);
   }
 
