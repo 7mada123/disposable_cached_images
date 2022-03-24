@@ -41,7 +41,7 @@ class _NetworkImageProvider extends _ImageCacheProviderInterface {
         state = state.copyWith(isLoading: true);
         imageInfo = ImageInfoData.init(key);
 
-        await _handelNetworkImage();
+        await handelNetworkImage();
 
         super.getImage();
 
@@ -70,7 +70,7 @@ class _NetworkImageProvider extends _ImageCacheProviderInterface {
         return;
       }
 
-      await _handelNetworkImage();
+      await handelNetworkImage();
 
       super.getImage();
     } catch (e) {
@@ -79,7 +79,9 @@ class _NetworkImageProvider extends _ImageCacheProviderInterface {
     }
   }
 
-  Future<void> _handelNetworkImage() async {
+  Future<void> handelNetworkImage() async {
+    // TODO
+    // download progrss with stream
     final response = await httpClient.get(
       Uri.parse(providerArguments.image),
       headers: providerArguments.headers,
@@ -89,8 +91,11 @@ class _NetworkImageProvider extends _ImageCacheProviderInterface {
 
     if (response.statusCode == 404) throw Exception('Image not found');
 
-    // TODO
-    /// resize image bytes
+    if (providerArguments.maxCacheHeight != null ||
+        providerArguments.maxCacheWidth != null) {
+      return handelDownloadedImageSize(response.bodyBytes);
+    }
+
     imageInfo = imageInfo.copyWith(imageBytes: response.bodyBytes);
 
     return handelImageProvider(
@@ -103,5 +108,89 @@ class _NetworkImageProvider extends _ImageCacheProviderInterface {
         read(imageDataBaseProvider).addNew(imageInfo);
       },
     );
+  }
+
+  Future<void> handelDownloadedImageSize(final Uint8List bytes) async {
+    final descriptor = await getImageDescriptor(bytes);
+
+    final originalCodec = await descriptor.instantiateCodec();
+
+    final originalFrameInfo = await originalCodec.getNextFrame();
+
+    // don't resize animated images
+    if (originalCodec.frameCount > 1) {
+      descriptor.dispose();
+
+      imageInfo = imageInfo.copyWith(
+        height: originalFrameInfo.image.height.toDouble(),
+        width: originalFrameInfo.image.width.toDouble(),
+        imageBytes: bytes,
+      );
+
+      read(_usedImageProvider).add(imageInfo);
+      read(imageDataBaseProvider).addNew(imageInfo);
+
+      return _handelAnimatedImage(
+        originalCodec,
+        image: originalFrameInfo.image,
+      );
+    }
+
+    final targetHeight = getTargetSize(
+      providerArguments.maxCacheHeight,
+      originalFrameInfo.image.height,
+    );
+
+    final targetWidth = getTargetSize(
+      providerArguments.maxCacheWidth,
+      originalFrameInfo.image.width,
+    );
+
+    originalCodec.dispose();
+    originalFrameInfo.image.dispose();
+
+    final resizedCodec = await descriptor.instantiateCodec(
+      targetHeight: targetHeight,
+      targetWidth: targetWidth,
+    );
+
+    final resizedFrameInfo = await resizedCodec.getNextFrame();
+
+    final resizedBytes = (await resizedFrameInfo.image.toByteData(
+      format: ui.ImageByteFormat.png,
+    ))!
+        .buffer
+        .asUint8List();
+
+    imageInfo = imageInfo.copyWith(
+      height: resizedFrameInfo.image.height.toDouble(),
+      width: resizedFrameInfo.image.width.toDouble(),
+      imageBytes: resizedBytes,
+    );
+
+    descriptor.dispose();
+    resizedCodec.dispose();
+
+    if (mounted) {
+      state = state.copyWith(
+        uiImage: resizedFrameInfo.image,
+        isLoading: false,
+        height: imageInfo.height,
+        width: imageInfo.width,
+      );
+    } else {
+      resizedFrameInfo.image.dispose();
+    }
+
+    read(_usedImageProvider).add(imageInfo);
+    read(imageDataBaseProvider).addNew(imageInfo);
+  }
+
+  static int? getTargetSize(final int? target, int origanl) {
+    if (target != null && target < origanl) {
+      return target;
+    } else {
+      return null;
+    }
   }
 }

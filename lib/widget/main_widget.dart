@@ -13,8 +13,8 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.keepAlive = false,
     required final String imageUrl,
     final Map<String, String>? headers,
-    this.targetWidth,
-    this.targetHeight,
+    this.maxCacheWidth,
+    this.maxCacheHeight,
     this.fit,
     this.centerSlice,
     this.scale = 1.0,
@@ -44,8 +44,8 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
         _provider = _networkImageProvider(
           _ImageProviderArguments(
             image: imageUrl,
-            targetWidth: targetWidth,
-            targetHeight: targetHeight,
+            maxCacheWidth: maxCacheWidth,
+            maxCacheHeight: maxCacheHeight,
             keepAlive: keepAlive,
             headers: headers,
           ),
@@ -88,24 +88,26 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
           !isDynamicHeight || width != null,
           'Image width must be specified for dynamic height images',
         ),
-        targetWidth = null,
-        targetHeight = null,
+        maxCacheWidth = null,
+        maxCacheHeight = null,
         _provider = _localImageProvider(
           _ImageProviderArguments(image: imagePath, keepAlive: keepAlive),
         ),
         super(key: key);
 
-  /// Image resize
+  /// Resize the image
   ///
-  /// If only one of targetWidth or targetHeight are specified,
+  /// If only one of maxCacheWidth or maxCacheHeight are specified,
   /// the other dimension will be scaled according to the aspect ratio of
   /// the supplied dimension.
 
-  /// If either targetWidth or targetHeight is less than or equal to zero,
-  /// it will be treated as if it is null.
+  /// If either maxCacheWidth or maxCacheHeight is less than the original value,
+  /// it will be ignored.
   ///
   /// The image will be resized before it is saved to the device storage
-  final int? targetHeight, targetWidth;
+  ///
+  /// Animated images wouldn't resize
+  final int? maxCacheHeight, maxCacheWidth;
 
   /// How to inscribe the image into the space allocated during layout.
   ///

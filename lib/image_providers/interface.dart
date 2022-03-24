@@ -51,7 +51,7 @@ abstract class _ImageCacheProviderInterface
     final void Function(ui.Image)? onImage,
   }) async {
     try {
-      final descriptor = await _getImageDescriptor(imageInfo.imageBytes!);
+      final descriptor = await getImageDescriptor(imageInfo.imageBytes!);
 
       final codec = await descriptor.instantiateCodec();
 
@@ -116,7 +116,7 @@ abstract class _ImageCacheProviderInterface
     return _handelAnimatedImage(codec, image: newFrame.image);
   }
 
-  static Future<ui.ImageDescriptor> _getImageDescriptor(
+  Future<ui.ImageDescriptor> getImageDescriptor(
     final Uint8List bytes,
   ) async {
     final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
