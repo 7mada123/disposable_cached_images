@@ -1,3 +1,18 @@
+## 1.0.2
+
+Resize the image, animated images will not be resized
+
+404 Exception
+
+Improved animated images handling
+
+Remove cache check for local images
+
+### Breaking change
+
+rename `targetWidth`, `targetHeight` to `maxCacheWidth`, `maxCacheHeight`
+
+
 ## 1.0.1 stable release
 
 Using `RawImage` with `ui.Image` directly instaded of `MemoryImage`, this improves the overall performance and fixed the issue where sometimes `evcit()` doesn't release the images from memory and some of the images are suddenly removed

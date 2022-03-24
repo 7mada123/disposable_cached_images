@@ -1,6 +1,6 @@
 name: disposable_cached_images
 description: A flutter package for displaying and releasing images from memory.
-version: 1.0.1
+version: 1.0.2
 homepage: https://github.com/7mada123/disposable_cached_images
 
 environment:
