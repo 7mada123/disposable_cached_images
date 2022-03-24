@@ -48,28 +48,18 @@ abstract class _ImageCacheProviderInterface
   }
 
   Future<void> handelImageProvider({
-    final int? targetWidth,
-    final int? targetHeight,
-    final OnSizeFunc? onSizeFunc,
+    final void Function(ui.Image)? onImage,
   }) async {
     try {
       final descriptor = await _getImageDescriptor(imageInfo.imageBytes!);
 
-      final codec = await descriptor.instantiateCodec(
-        targetWidth: targetWidth,
-        targetHeight: targetHeight,
-      );
+      final codec = await descriptor.instantiateCodec();
 
       final frameInfo = await codec.getNextFrame();
 
       descriptor.dispose();
 
-      if (onSizeFunc != null) {
-        onSizeFunc(
-          frameInfo.image.height.toDouble(),
-          frameInfo.image.width.toDouble(),
-        );
-      }
+      if (onImage != null) onImage(frameInfo.image);
 
       if (!mounted) {
         codec.dispose();
@@ -141,8 +131,6 @@ abstract class _ImageCacheProviderInterface
 
 typedef DisposableImageProvider = AutoDisposeStateNotifierProvider<
     _ImageCacheProviderInterface, _ImageProviderState>;
-
-typedef OnSizeFunc = void Function(double height, double width);
 
 extension on String {
   /// remove illegal file name characters when saving file

@@ -37,8 +37,11 @@ class _LocalImageProvider extends _ImageCacheProviderInterface {
       imageInfo = imageInfo.copyWith(imageBytes: bytes);
 
       await handelImageProvider(
-        onSizeFunc: (final height, final width) {
-          imageInfo = imageInfo.copyWith(height: height, width: width);
+        onImage: (final image) {
+          imageInfo = imageInfo.copyWith(
+            height: image.height.toDouble(),
+            width: image.width.toDouble(),
+          );
         },
       );
 

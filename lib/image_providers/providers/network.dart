@@ -89,14 +89,17 @@ class _NetworkImageProvider extends _ImageCacheProviderInterface {
 
     if (response.statusCode == 404) throw Exception('Image not found');
 
+    // TODO
+    /// resize image bytes
     imageInfo = imageInfo.copyWith(imageBytes: response.bodyBytes);
 
     return handelImageProvider(
-      targetWidth: providerArguments.targetWidth,
-      targetHeight: providerArguments.targetHeight,
-      onSizeFunc: (final height, final width) {
-        imageInfo = imageInfo.copyWith(height: height, width: width);
-        read(_usedImageProvider).add(imageInfo);
+      onImage: (final image) {
+        imageInfo = imageInfo.copyWith(
+          height: image.height.toDouble(),
+          width: image.width.toDouble(),
+        );
+
         read(imageDataBaseProvider).addNew(imageInfo);
       },
     );
