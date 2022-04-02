@@ -39,7 +39,7 @@ DisposableCachedImage.network(imageUrl: 'https://picsum.photos/id/23/200/300');
 ##### Obtaining a local image from assets or device storage using path
 
 ```dart
-DisposableCachedImage.assets(imagePath: 'images/a_dot_burr.jpeg');
+DisposableCachedImage.local(imagePath: 'images/a_dot_burr.jpeg');
 ```
 
 ##### Display dynamic height images

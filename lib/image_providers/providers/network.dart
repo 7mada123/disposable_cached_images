@@ -82,21 +82,29 @@ class _NetworkImageProvider extends _ImageCacheProviderInterface {
   Future<void> handelNetworkImage() async {
     // TODO
     // download progrss with stream
-    final response = await httpClient.get(
-      Uri.parse(providerArguments.image),
-      headers: providerArguments.headers,
+    // final response = await httpClient.get(
+    //   Uri.parse(providerArguments.image),
+    //   headers: providerArguments.headers,
+    // );
+
+    final response = await read(imageDataBaseProvider).getImageFromUrl(
+      httpClient,
+      providerArguments.image,
+      providerArguments.headers,
     );
+
+    if (response is! Uint8List) throw Exception(response);
 
     httpClient.close();
 
-    if (response.statusCode == 404) throw Exception('Image not found');
+    // if (response.statusCode == 404) throw Exception('Image not found');
 
     if (providerArguments.maxCacheHeight != null ||
         providerArguments.maxCacheWidth != null) {
-      return handelDownloadedImageSize(response.bodyBytes);
+      return handelDownloadedImageSize(response);
     }
 
-    imageInfo = imageInfo.copyWith(imageBytes: response.bodyBytes);
+    imageInfo = imageInfo.copyWith(imageBytes: response);
 
     return handelImageProvider(
       onImage: (final image) {

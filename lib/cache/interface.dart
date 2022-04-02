@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 
 import '../image_info_data.dart';
 import './image_cache_stub.dart'
@@ -22,13 +23,19 @@ abstract class ImageCacheManger {
 
   Future<void> init(final bool enableWebCache);
 
-  Future<void> addNew(final ImageInfoData imageInfo);
+  void addNew(final ImageInfoData imageInfo);
 
   ImageInfoData? getImageInfo(final String key);
 
   Future<Uint8List?> getBytes(final String key);
 
   Future<Uint8List> getLocalBytes(final String imagePath);
+
+  Future<dynamic> getImageFromUrl(
+    final http.Client httpClient,
+    final String url,
+    final Map<String, String>? headers,
+  );
 
   /// Clear [DisposableCachedImage] storage cache.
   Future<void> clearCache();

@@ -1,3 +1,7 @@
+## 1.0.3
+
+Big performance improvement using [dart:isolate](https://api.dart.dev/stable/2.16.2/dart-isolate/dart-isolate-library.html)
+
 ## 1.0.2
 
 Resize the image, animated images will not be resized

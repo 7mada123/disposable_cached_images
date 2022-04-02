@@ -7,6 +7,7 @@ import 'dart:html' as html;
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 import './interface.dart';
 import '../image_info_data.dart';
@@ -52,7 +53,7 @@ class _WebImageDataBase extends ImageCacheManger {
   }
 
   @override
-  Future<void> addNew(final ImageInfoData imageInfo) async {
+  void addNew(final ImageInfoData imageInfo) {
     if (_disableWebCache || fileContent.containsKey(imageInfo.key)) return;
 
     fileContent.putIfAbsent(imageInfo.key, () => imageInfo.sizeToMap());
@@ -141,6 +142,16 @@ class _WebImageDataBase extends ImageCacheManger {
       caches.remove(key);
       _sortedWebKeys.remove(key);
     }
+  }
+
+  @override
+  Future getImageFromUrl(
+    http.Client httpClient,
+    String url,
+    Map<String, String>? headers,
+  ) {
+    // TODO: implement getImageFromUrl
+    throw UnimplementedError();
   }
 }
 
