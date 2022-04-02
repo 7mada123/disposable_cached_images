@@ -80,13 +80,7 @@ class _NetworkImageProvider extends _ImageCacheProviderInterface {
   }
 
   Future<void> handelNetworkImage() async {
-    // TODO
-    // download progrss with stream
-    // final response = await httpClient.get(
-    //   Uri.parse(providerArguments.image),
-    //   headers: providerArguments.headers,
-    // );
-
+    // TODO save in isloate
     final response = await read(imageDataBaseProvider).getImageFromUrl(
       httpClient,
       providerArguments.image,

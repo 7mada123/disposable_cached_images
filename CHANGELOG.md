@@ -1,6 +1,13 @@
-## 1.0.3
+## 1.0.5
 
-Big performance improvement using [dart:isolate](https://api.dart.dev/stable/2.16.2/dart-isolate/dart-isolate-library.html)
+### Big performance improvement
+
+using [dart:isolate](https://api.dart.dev/stable/2.16.2/dart-isolate/dart-isolate-library.html)
+
+added `enableRasterthreadreducer` option (wich is enable by defult) to use diffrent image size when needed to reduce raster thread and this while improve the preformance with a little increse in memory since now you would have difrent images instanse with difrent size
+
+> If you want to have the image at the default size in a widget then disable this option and the image would be shown with at the default size only in this particular widget
+
 
 ## 1.0.2
 

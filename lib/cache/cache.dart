@@ -9,6 +9,10 @@ import 'package:path_provider/path_provider.dart';
 import './interface.dart';
 import '../image_info_data.dart';
 
+// TODO
+// Improve raster cache by using 2 providers at the same time
+// and a thrid one that detects new value + changine KEY TO resulation
+
 ImageCacheManger getInstance() => const _ImageDataBase();
 
 class _ImageDataBase extends ImageCacheManger {
@@ -167,6 +171,12 @@ void dataWriterIoslate(final List<dynamic> values) {
   final ioSink = cacheKeysFile.openWrite(mode: FileMode.writeOnlyAppend);
 
   port.listen((final message) {
+    // TODO
+    /// broken
+    final http.Client httpClien = message[0];
+    final String url = message[1];
+    final Map<String, String>? headers = message[2];
+
     final imageInfo = message as ImageInfoData;
 
     final imageBytesFile = File(values[1] + imageInfo.key);
@@ -216,8 +226,6 @@ void runHttpIoslate(final SendPort receivePort) {
 
     final String url = message[1];
 
-    // print('getting image from isolate for url $url');
-
     final SendPort imageSendPort = message[2];
 
     final Map<String, String>? headers = message[3];
@@ -234,8 +242,6 @@ void runHttpIoslate(final SendPort receivePort) {
       }
 
       client.close();
-
-      // print('sending image from isolate');
 
       imageSendPort.send(response.bodyBytes);
     } catch (e) {

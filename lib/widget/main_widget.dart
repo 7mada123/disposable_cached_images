@@ -27,6 +27,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.isAntiAlias = false,
     this.invertColors = false,
     this.height,
+    this.enableRasterthreadreducer = true,
     this.colorBlendMode,
     this.isDynamicHeight = false,
     this.matchTextDirection = false,
@@ -77,6 +78,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.filterQuality = FilterQuality.none,
     this.width,
     this.onImage,
+    this.enableRasterthreadreducer = true,
     this.repeat = ImageRepeat.noRepeat,
     this.isAntiAlias = false,
     this.invertColors = false,
@@ -94,6 +96,9 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
           _ImageProviderArguments(image: imagePath, keepAlive: keepAlive),
         ),
         super(key: key);
+
+  // TODO doc
+  final bool enableRasterthreadreducer;
 
   /// Resize the image
   ///
