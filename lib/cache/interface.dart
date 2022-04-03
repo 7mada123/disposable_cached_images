@@ -23,7 +23,7 @@ abstract class ImageCacheManger {
 
   Future<void> init(final bool enableWebCache);
 
-  void addNew(final ImageInfoData imageInfo);
+  void add(final ImageInfoData imageInfo);
 
   ImageInfoData? getImageInfo(final String key);
 

@@ -53,7 +53,7 @@ class _WebImageDataBase extends ImageCacheManger {
   }
 
   @override
-  void addNew(final ImageInfoData imageInfo) {
+  void add(final ImageInfoData imageInfo) {
     if (_disableWebCache || fileContent.containsKey(imageInfo.key)) return;
 
     fileContent.putIfAbsent(imageInfo.key, () => imageInfo.sizeToMap());
@@ -149,9 +149,12 @@ class _WebImageDataBase extends ImageCacheManger {
     http.Client httpClient,
     String url,
     Map<String, String>? headers,
-  ) {
-    // TODO: implement getImageFromUrl
-    throw UnimplementedError();
+  ) async {
+    final response = await httpClient.get(Uri.parse(url), headers: headers);
+
+    if (response.statusCode == 404) Exception('Image not found');
+
+    return response.bodyBytes;
   }
 }
 

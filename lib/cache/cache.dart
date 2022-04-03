@@ -2,16 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
 
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
 import './interface.dart';
 import '../image_info_data.dart';
-
-// TODO
-// Improve raster cache by using 2 providers at the same time
-// and a thrid one that detects new value + changine KEY TO resulation
 
 ImageCacheManger getInstance() => const _ImageDataBase();
 
@@ -25,8 +21,6 @@ class _ImageDataBase extends ImageCacheManger {
   static late final SendPort fileWriterPort;
   static late final SendPort fileReadePrort;
   static late final SendPort networkImagePrort;
-
-  // static late final Isolate isolate;
 
   const _ImageDataBase();
 
@@ -47,38 +41,33 @@ class _ImageDataBase extends ImageCacheManger {
       fileContent = {};
     }
 
-    // await clearCache();
-
-    final ReceivePort _port = ReceivePort();
-
     /// Isolate for writing images to device storage
+    final ReceivePort dataWriterIoslatePort = ReceivePort();
     await Isolate.spawn<List<dynamic>>(
       dataWriterIoslate,
-      [_port.sendPort, cachePath],
+      [dataWriterIoslatePort.sendPort, cachePath],
     );
-
-    fileWriterPort = await _port.first;
+    fileWriterPort = await dataWriterIoslatePort.first;
+    dataWriterIoslatePort.close();
 
     /// Isolate for reading images from device storage
+    final ReceivePort dataReaderIoslatePort = ReceivePort();
     await Isolate.spawn<List<dynamic>>(
       dataReaderIoslate,
-      [_port.sendPort, cachePath],
+      [dataReaderIoslatePort.sendPort, cachePath],
     );
-
-    fileReadePrort = await _port.first;
+    fileReadePrort = await dataReaderIoslatePort.first;
+    dataReaderIoslatePort.close();
 
     /// Isolate for getting images bytes data from url
-    await Isolate.spawn<SendPort>(runHttpIoslate, _port.sendPort);
-
-    networkImagePrort = await _port.first;
-
-    _port.close();
-
-    // ioSink = cacheKeysFile.openWrite(mode: FileMode.writeOnlyAppend);
+    final ReceivePort runHttpIoslateort = ReceivePort();
+    await Isolate.spawn<SendPort>(runHttpIoslate, runHttpIoslateort.sendPort);
+    networkImagePrort = await runHttpIoslateort.first;
+    runHttpIoslateort.close();
   }
 
   @override
-  void addNew(final ImageInfoData imageInfo) {
+  void add(final ImageInfoData imageInfo) {
     if (isContainKey(imageInfo.key)) return;
 
     fileContent.putIfAbsent(imageInfo.key, () => imageInfo.sizeToMap());
@@ -101,7 +90,7 @@ class _ImageDataBase extends ImageCacheManger {
 
     final fileReceivePort = ReceivePort();
 
-    fileReadePrort.send([key, fileReadePrort]);
+    fileReadePrort.send([key, fileReceivePort.sendPort]);
 
     final bytes = await fileReceivePort.first;
 
@@ -123,10 +112,6 @@ class _ImageDataBase extends ImageCacheManger {
 
   @override
   Future<void> clearCache() async {
-    // TODO
-
-    // await ioSink.close();
-
     await File(cachePath).delete(recursive: true);
 
     final cacheKeysFile = File(cachePath + keysFile);
@@ -134,8 +119,6 @@ class _ImageDataBase extends ImageCacheManger {
     await cacheKeysFile.create(recursive: true);
 
     fileContent.clear();
-
-    // ioSink = cacheKeysFile.openWrite(mode: FileMode.writeOnlyAppend);
   }
 
   static bool isContainKey(final String key) => fileContent.containsKey(key);
@@ -165,21 +148,16 @@ void dataWriterIoslate(final List<dynamic> values) {
 
   final SendPort sendPort = values[0];
 
+  final String path = values[1];
+
   sendPort.send(port.sendPort);
 
-  final cacheKeysFile = File(values[1] + "cache_keys.json");
-  final ioSink = cacheKeysFile.openWrite(mode: FileMode.writeOnlyAppend);
+  final cacheKeysFile = File(path + "cache_keys.json");
 
   port.listen((final message) {
-    // TODO
-    /// broken
-    final http.Client httpClien = message[0];
-    final String url = message[1];
-    final Map<String, String>? headers = message[2];
+    final ImageInfoData imageInfo = message;
 
-    final imageInfo = message as ImageInfoData;
-
-    final imageBytesFile = File(values[1] + imageInfo.key);
+    final imageBytesFile = File(path + imageInfo.key);
 
     imageBytesFile.createSync();
 
@@ -190,9 +168,8 @@ void dataWriterIoslate(final List<dynamic> values) {
 
     cacheKeysFile.writeAsString(
       json.encode({imageInfo.key: imageInfo.sizeToMap()}),
+      mode: FileMode.writeOnlyAppend,
     );
-
-    ioSink.write(json.encode({imageInfo.key: imageInfo.sizeToMap()}));
   });
 }
 
@@ -226,7 +203,7 @@ void runHttpIoslate(final SendPort receivePort) {
 
     final String url = message[1];
 
-    final SendPort imageSendPort = message[2];
+    final SendPort sendPort = message[2];
 
     final Map<String, String>? headers = message[3];
 
@@ -237,16 +214,15 @@ void runHttpIoslate(final SendPort receivePort) {
       );
 
       if (response.statusCode == 404) {
-        imageSendPort.send('Image not found');
+        sendPort.send(Exception('Image not found'));
         return;
       }
 
       client.close();
 
-      imageSendPort.send(response.bodyBytes);
+      sendPort.send(response.bodyBytes);
     } catch (e) {
-      imageSendPort.send(e);
-      print('error from isolate $e');
+      sendPort.send(e);
     }
   });
 }
