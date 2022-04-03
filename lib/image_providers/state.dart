@@ -5,23 +5,31 @@ class _ImageProviderState {
   final Object? error;
   final StackTrace? stackTrace;
   final ui.Image? uiImage;
-  final double? height, width;
+  final int? height, width;
 
   const _ImageProviderState({
     final this.isLoading = false,
-    final this.uiImage,
+    required final this.uiImage,
     this.error,
     this.height,
     this.stackTrace,
     this.width,
   });
 
+  const _ImageProviderState.init()
+      : error = null,
+        height = null,
+        width = null,
+        stackTrace = null,
+        uiImage = null,
+        isLoading = false;
+
   _ImageProviderState copyWith({
     final bool? isLoading,
     final Object? error,
+    final int? height,
+    final int? width,
     final ui.Image? uiImage,
-    final double? height,
-    final double? width,
     final StackTrace? stackTrace,
   }) {
     return _ImageProviderState(
@@ -41,14 +49,9 @@ class _ImageProviderState {
     return other is _ImageProviderState &&
         other.isLoading == isLoading &&
         other.error == error &&
-        other.stackTrace == stackTrace &&
-        other.uiImage == uiImage;
+        other.stackTrace == stackTrace;
   }
 
   @override
-  int get hashCode =>
-      isLoading.hashCode ^
-      error.hashCode ^
-      uiImage.hashCode ^
-      stackTrace.hashCode;
+  int get hashCode => isLoading.hashCode ^ error.hashCode ^ stackTrace.hashCode;
 }
