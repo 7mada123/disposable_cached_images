@@ -1,42 +1,41 @@
 import 'dart:typed_data';
 
-/// A class to handle the necessary image data
+/// class to handle the necessary image data
 class ImageInfoData {
-  final double? width;
-  final double? height;
-  final String key;
   final Uint8List? imageBytes;
+  final int? width, height;
+  final String key;
 
   const ImageInfoData({
-    required final this.width,
     required final this.height,
+    required final this.width,
     required final this.key,
     final this.imageBytes,
   });
 
   ImageInfoData copyWith({
-    final double? width,
-    final double? height,
-    final String? key,
     final Uint8List? imageBytes,
+    final String? key,
+    final int? height,
+    final int? width,
   }) {
     return ImageInfoData(
-      width: width ?? this.width,
-      height: height ?? this.height,
-      key: key ?? this.key,
       imageBytes: imageBytes ?? this.imageBytes,
+      height: height ?? this.height,
+      width: width ?? this.width,
+      key: key ?? this.key,
     );
   }
 
-  ImageInfoData.init(final this.key)
-      : height = null,
-        width = null,
-        imageBytes = null;
+  const ImageInfoData.init(final this.key)
+      : imageBytes = null,
+        height = null,
+        width = null;
 
-  Map<String, double> sizeToMap() {
+  Map<String, int> sizeToMap() {
     return {
-      'width': width!,
       'height': height!,
+      'width': width!,
     };
   }
 
@@ -45,8 +44,8 @@ class ImageInfoData {
     final String key,
   ) {
     return ImageInfoData(
-      width: map['width'],
       height: map['height'],
+      width: map['width'],
       key: key,
     );
   }
@@ -56,17 +55,17 @@ class ImageInfoData {
     if (identical(this, other)) return true;
 
     return other is ImageInfoData &&
-        other.width == width &&
+        other.imageBytes == imageBytes &&
         other.height == height &&
-        other.key == key &&
-        other.imageBytes == imageBytes;
+        other.width == width &&
+        other.key == key;
   }
 
   @override
   int get hashCode {
-    return width.hashCode ^
+    return imageBytes.hashCode ^
         height.hashCode ^
-        key.hashCode ^
-        imageBytes.hashCode;
+        width.hashCode ^
+        key.hashCode;
   }
 }
