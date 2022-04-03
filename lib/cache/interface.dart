@@ -37,6 +37,8 @@ abstract class ImageCacheManger {
     final Map<String, String>? headers,
   );
 
+  void cancleImageDownload(final String url);
+
   /// Clear [DisposableCachedImage] storage cache.
   Future<void> clearCache();
 }

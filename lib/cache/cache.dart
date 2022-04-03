@@ -21,6 +21,7 @@ class _ImageDataBase extends ImageCacheManger {
   static late final SendPort fileWriterPort;
   static late final SendPort fileReadePrort;
   static late final SendPort networkImagePrort;
+  static late final SendPort networkImageCanclePrort;
 
   const _ImageDataBase();
 
@@ -60,10 +61,15 @@ class _ImageDataBase extends ImageCacheManger {
     dataReaderIoslatePort.close();
 
     /// Isolate for getting images bytes data from url
-    final ReceivePort runHttpIoslateort = ReceivePort();
-    await Isolate.spawn<SendPort>(runHttpIoslate, runHttpIoslateort.sendPort);
-    networkImagePrort = await runHttpIoslateort.first;
-    runHttpIoslateort.close();
+    final ReceivePort connectionPort = ReceivePort();
+    final ReceivePort canclePort = ReceivePort();
+    await Isolate.spawn<List<SendPort>>(
+      runHttpIoslate,
+      [connectionPort.sendPort, canclePort.sendPort],
+    );
+    networkImagePrort = await connectionPort.first;
+    networkImageCanclePrort = await canclePort.first;
+    connectionPort.close();
   }
 
   @override
@@ -141,6 +147,11 @@ class _ImageDataBase extends ImageCacheManger {
 
     return response;
   }
+
+  @override
+  void cancleImageDownload(final String url) {
+    networkImageCanclePrort.send(url);
+  }
 }
 
 void dataWriterIoslate(final List<dynamic> values) {
@@ -193,19 +204,34 @@ void dataReaderIoslate(final List<dynamic> values) {
   });
 }
 
-void runHttpIoslate(final SendPort receivePort) {
-  final ReceivePort port = ReceivePort();
+void runHttpIoslate(final List<SendPort> receivePort) {
+  final ReceivePort callPort = ReceivePort();
+  final ReceivePort cancelPort = ReceivePort();
 
-  receivePort.send(port.sendPort);
+  receivePort[0].send(callPort.sendPort);
+  receivePort[1].send(cancelPort.sendPort);
 
-  port.listen((final message) async {
-    final http.Client client = message[0];
+  final Map<String, http.Client> connectios = {};
+
+  cancelPort.listen((final message) {
+    final client = connectios[message];
+
+    if (client == null) return;
+
+    client.close();
+    connectios.remove(message);
+  });
+
+  callPort.listen((final message) async {
+    final client = http.Client();
 
     final String url = message[1];
 
     final SendPort sendPort = message[2];
 
     final Map<String, String>? headers = message[3];
+
+    connectios.putIfAbsent(url, () => client);
 
     try {
       final response = await client.get(

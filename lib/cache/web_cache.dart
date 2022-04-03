@@ -156,6 +156,11 @@ class _WebImageDataBase extends ImageCacheManger {
 
     return response.bodyBytes;
   }
+
+  @override
+  void cancleImageDownload(String url) {
+    // TODO: implement cancleImageDownload
+  }
 }
 
 extension on ImageInfoData {
