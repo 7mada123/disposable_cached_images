@@ -27,7 +27,6 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.isAntiAlias = false,
     this.invertColors = false,
     this.height,
-    this.enableRasterthreadreducer = true,
     this.colorBlendMode,
     this.isDynamicHeight = false,
     this.matchTextDirection = false,
@@ -78,7 +77,6 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.filterQuality = FilterQuality.none,
     this.width,
     this.onImage,
-    this.enableRasterthreadreducer = true,
     this.repeat = ImageRepeat.noRepeat,
     this.isAntiAlias = false,
     this.invertColors = false,
@@ -96,9 +94,6 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
           _ImageProviderArguments(image: imagePath, keepAlive: keepAlive),
         ),
         super(key: key);
-
-  // TODO doc
-  final bool enableRasterthreadreducer;
 
   /// Resize the image
   ///
@@ -385,8 +380,8 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
 
   static double? _getDynamicHeight({
     required final double targetWidth,
-    required final double? width,
-    required final double? height,
+    required final int? width,
+    required final int? height,
   }) {
     if (width == null || height == null) return null;
 
@@ -398,15 +393,15 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
 typedef OnImage = Widget Function(
   BuildContext context,
   Widget imageWidget,
-  double? height,
-  double? width,
+  int? height,
+  int? width,
 );
 
 /// Builder function to create a placeholder widget while the image is loading
 typedef OnLoading = Widget Function(
   BuildContext context,
-  double? height,
-  double? width,
+  int? height,
+  int? width,
 );
 
 /// Builder function to create an error widget
