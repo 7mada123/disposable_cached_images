@@ -13,7 +13,7 @@ import './cache/interface.dart';
 import './image_info_data.dart';
 
 part './image_providers/arguments.dart';
-part './image_providers/interface.dart';
+part './image_providers/base_provider.dart';
 part './image_providers/providers/local.dart';
 part './image_providers/providers/network.dart';
 part './image_providers/state.dart';
