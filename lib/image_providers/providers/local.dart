@@ -1,9 +1,7 @@
 part of disposable_cached_images;
 
-final _localImageProvider = StateNotifierProvider.autoDispose.family<
-    _ImageCacheProviderInterface,
-    _ImageProviderState,
-    _ImageProviderArguments>((
+final _localImageProvider = StateNotifierProvider.autoDispose
+    .family<_BaseImageProvider, _ImageProviderState, _ImageProviderArguments>((
   final ref,
   final providerArguments,
 ) {
@@ -15,7 +13,7 @@ final _localImageProvider = StateNotifierProvider.autoDispose.family<
   );
 });
 
-class _LocalImageProvider extends _ImageCacheProviderInterface {
+class _LocalImageProvider extends _BaseImageProvider {
   _LocalImageProvider(
     final Reader read,
     final _ImageProviderArguments providerArguments,
@@ -39,13 +37,14 @@ class _LocalImageProvider extends _ImageCacheProviderInterface {
       await handelImageProvider(
         onImage: (final image) {
           imageInfo = imageInfo.copyWith(
-            height: image.height.toDouble(),
-            width: image.width.toDouble(),
+            height: image.height,
+            width: image.width,
+            imageBytes: bytes,
           );
         },
       );
 
-      super.getImage();
+      read(_usedImageProvider).add(imageInfo);
     } catch (e) {
       onImageError(e);
     }
