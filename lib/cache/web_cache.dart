@@ -21,6 +21,8 @@ class _WebImageDataBase extends ImageCacheManger {
 
   static late final bool _disableWebCache;
 
+  static final Map<String, http.Client> httpClients = {};
+
   const _WebImageDataBase();
 
   @override
@@ -146,20 +148,34 @@ class _WebImageDataBase extends ImageCacheManger {
 
   @override
   Future getImageFromUrl(
-    http.Client httpClient,
-    String url,
-    Map<String, String>? headers,
+    final String url,
+    final Map<String, String>? headers,
   ) async {
-    final response = await httpClient.get(Uri.parse(url), headers: headers);
+    final clinet = http.Client();
 
-    if (response.statusCode == 404) Exception('Image not found');
+    httpClients.putIfAbsent(url, () => clinet);
 
-    return response.bodyBytes;
+    try {
+      final response = await clinet.get(Uri.parse(url), headers: headers);
+
+      clinet.close();
+      httpClients.remove(url);
+
+      if (response.statusCode == 404) Exception('Image not found');
+
+      return response.bodyBytes;
+    } catch (e) {
+      clinet.close();
+      httpClients.remove(url);
+
+      return e;
+    }
   }
 
   @override
-  void cancleImageDownload(String url) {
-    // TODO: implement cancleImageDownload
+  void cancleImageDownload(final String url) {
+    httpClients[url]?.close();
+    httpClients.remove(url);
   }
 }
 
