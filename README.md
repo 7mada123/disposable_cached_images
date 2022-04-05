@@ -10,6 +10,8 @@ Cancel the download if the image widget has been disposed to reduce bandwidth us
 
 Remove the image from memory if the image widget has been disposed to reduce device memory usage.
 
+High performance due to the use of [dart:isolate](https://api.dart.dev/stable/2.16.2/dart-isolate/dart-isolate-library.html)
+
 ## Usage
 
 ### Setting up
@@ -81,19 +83,20 @@ DisposableCachedImage.network(
 );
 ```
 
-#### Caching images on the web
+#### Resize images
 
-If you want to enable web caching, you must declare it in `runAppWithDisposableCachedImage` as shown below.
+You can change the image size to the provided `width` and \ or `height` by enabling `resizeImage` (disabled by default) to reduce raster thread usage when using high resolution images, if this option is enabled the same provider instance would be used for the number of images that share the same url \ path with a different image size for each widget to have a gallery like experience.
+
+To change the size of the images in bytes before they are saved to the storage, provide `maxCacheWidth` and \ or `maxCacheHeight`.
 
 ```dart
-runAppWithDisposableCachedImage(
-  const MyApp(),
-  // enable Web cache, default false
-  enableWebCache: true,
-);
+DisposableCachedImage.network(
+ imageUrl: imageUrl,
+ maxCacheWidth: 300,
+ width: 200,
+ resizeImage: true,
+),
 ```
-
-> In both cases the images will be saved in memory as variables, and the web local storage cache should not be enabled if your application uses many images because of the local storage size limit.
 
 #### Clipping
 
@@ -138,6 +141,22 @@ DisposableCachedImage.network(
 DisposableCachedImage.clearCache();
 ```
 
+### Web
+
+If you want to enable web caching, you must declare it in `runAppWithDisposableCachedImage` as shown below.
+
+```dart
+runAppWithDisposableCachedImage(
+  const MyApp(),
+  // enable Web cache, default false
+  enableWebCache: true,
+);
+```
+
+> In both cases the images will be saved in memory as variables, and the web local storage cache should not be enabled if your application uses many images because of the local storage size limit, prefer to use Cache-Control HTTP header.
+
+> The performance of the web version is not good and needs improvements, please contribute to the repo if you are familiar with Web Workers
+
 ## How it works
 
 The package uses [RawImage](https://api.flutter.dev/flutter/widgets/RawImage-class.html) with [dart-ui-Image](https://api.flutter.dev/flutter/dart-ui/Image-class.html) directly without the need for [ImageProvider](https://api.flutter.dev/flutter/painting/ImageProvider-class.html)
@@ -153,6 +172,8 @@ Using [http](https://pub.dev/packages/http) to download images from the internet
 The [example](https://github.com/7mada123/disposable_cached_images/tree/main/example) directory has a sample application that uses this plugin.
 
 ### Roadmap
+
+Improve performance for web
 
 Improve package documentation
 
