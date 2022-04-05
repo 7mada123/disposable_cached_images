@@ -64,7 +64,7 @@ class _ImageDataBase extends ImageCacheManger {
     final ReceivePort connectionPort = ReceivePort();
     final ReceivePort canclePort = ReceivePort();
     await Isolate.spawn<List<SendPort>>(
-      runHttpIoslate,
+      httpIoslate,
       [connectionPort.sendPort, canclePort.sendPort],
     );
     networkImagePrort = await connectionPort.first;
@@ -100,6 +100,8 @@ class _ImageDataBase extends ImageCacheManger {
 
     final bytes = await fileReceivePort.first;
 
+    fileReceivePort.close();
+
     return bytes;
   }
 
@@ -127,18 +129,15 @@ class _ImageDataBase extends ImageCacheManger {
     fileContent.clear();
   }
 
-  static bool isContainKey(final String key) => fileContent.containsKey(key);
-
   @override
   Future getImageFromUrl(
-    final http.Client httpClient,
     final String url,
     final Map<String, String>? headers,
   ) async {
     final imageReciverPort = ReceivePort();
 
     networkImagePrort.send(
-      [httpClient, url, imageReciverPort.sendPort, headers],
+      [url, imageReciverPort.sendPort, headers],
     );
 
     final response = await imageReciverPort.first;
@@ -152,6 +151,8 @@ class _ImageDataBase extends ImageCacheManger {
   void cancleImageDownload(final String url) {
     networkImageCanclePrort.send(url);
   }
+
+  static bool isContainKey(final String key) => fileContent.containsKey(key);
 }
 
 void dataWriterIoslate(final List<dynamic> values) {
@@ -177,7 +178,7 @@ void dataWriterIoslate(final List<dynamic> values) {
       mode: FileMode.writeOnly,
     );
 
-    cacheKeysFile.writeAsString(
+    cacheKeysFile.writeAsStringSync(
       json.encode({imageInfo.key: imageInfo.sizeToMap()}),
       mode: FileMode.writeOnlyAppend,
     );
@@ -204,7 +205,7 @@ void dataReaderIoslate(final List<dynamic> values) {
   });
 }
 
-void runHttpIoslate(final List<SendPort> receivePort) {
+void httpIoslate(final List<SendPort> receivePort) {
   final ReceivePort callPort = ReceivePort();
   final ReceivePort cancelPort = ReceivePort();
 
@@ -225,11 +226,11 @@ void runHttpIoslate(final List<SendPort> receivePort) {
   callPort.listen((final message) async {
     final client = http.Client();
 
-    final String url = message[1];
+    final String url = message[0];
 
-    final SendPort sendPort = message[2];
+    final SendPort sendPort = message[1];
 
-    final Map<String, String>? headers = message[3];
+    final Map<String, String>? headers = message[2];
 
     connectios.putIfAbsent(url, () => client);
 
@@ -239,12 +240,13 @@ void runHttpIoslate(final List<SendPort> receivePort) {
         headers: headers,
       );
 
+      client.close();
+      connectios.remove(url);
+
       if (response.statusCode == 404) {
         sendPort.send(Exception('Image not found'));
         return;
       }
-
-      client.close();
 
       sendPort.send(response.bodyBytes);
     } catch (e) {
