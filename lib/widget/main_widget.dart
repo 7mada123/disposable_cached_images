@@ -305,7 +305,7 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
   void initState() {
     _sizeKey = uiImageSizekey(widget.width?.toInt(), widget.height?.toInt());
 
-    addImageSize();
+    _addImageSize();
 
     fadeAnimationController = AnimationController(
       vsync: this,
@@ -319,7 +319,7 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
   @override
   void didUpdateWidget(covariant final DisposableCachedImage oldWidget) {
     if (oldWidget.width != widget.width || oldWidget.height != widget.height) {
-      updateImageSize();
+      _updateImageSize();
     }
 
     super.didUpdateWidget(oldWidget);
@@ -424,7 +424,7 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
     return imageWidget;
   }
 
-  void addImageSize() {
+  void _addImageSize() {
     if (!widget.resizeImage) return;
 
     ref.read(widget._provider.notifier).addResizedImage(
@@ -434,7 +434,7 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
         );
   }
 
-  void updateImageSize() {
+  void _updateImageSize() {
     if (!widget.resizeImage) return;
 
     ref.read(widget._provider.notifier).updateResizedImage(
