@@ -28,6 +28,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.invertColors = false,
     this.height,
     this.colorBlendMode,
+    this.resizeImage = false,
     this.isDynamicHeight = false,
     this.matchTextDirection = false,
     this.borderRadius,
@@ -41,6 +42,10 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
           !isDynamicHeight || width != null,
           'Image width must be specified for dynamic size',
         ),
+        assert(
+          !resizeImage || width != null || height != null,
+          'Either height or width must be specified when resizeImage is enabled',
+        ),
         _provider = _networkImageProvider(
           _ImageProviderArguments(
             image: imageUrl,
@@ -48,6 +53,9 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
             maxCacheHeight: maxCacheHeight,
             keepAlive: keepAlive,
             headers: headers,
+            resizeImage: resizeImage,
+            widgetHeight: height?.toInt(),
+            widgetWidth: width?.toInt(),
           ),
         ),
         super(key: key);
@@ -71,6 +79,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.height,
     this.colorBlendMode,
     this.color,
+    this.resizeImage = false,
     this.shape = BoxShape.rectangle,
     this.alignment = Alignment.center,
     this.addRepaintBoundaries = true,
@@ -88,14 +97,24 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
           !isDynamicHeight || width != null,
           'Image width must be specified for dynamic height images',
         ),
+        assert(
+          !resizeImage || width != null || height != null,
+          'Either height or width must be specified when resizeImage is enabled',
+        ),
         maxCacheWidth = null,
         maxCacheHeight = null,
         _provider = _localImageProvider(
-          _ImageProviderArguments(image: imagePath, keepAlive: keepAlive),
+          _ImageProviderArguments(
+            image: imagePath,
+            keepAlive: keepAlive,
+            resizeImage: resizeImage,
+            widgetHeight: height?.toInt(),
+            widgetWidth: width?.toInt(),
+          ),
         ),
         super(key: key);
 
-  /// Resize the image
+  /// Resize the image and save the resized bytes to storage, see [resizeImage].
   ///
   /// If only one of maxCacheWidth or maxCacheHeight are specified,
   /// the other dimension will be scaled according to the aspect ratio of
@@ -103,8 +122,6 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
 
   /// If either maxCacheWidth or maxCacheHeight is less than the original value,
   /// it will be ignored.
-  ///
-  /// The image will be resized before it is saved to the device storage
   ///
   /// Animated images wouldn't resize
   final int? maxCacheHeight, maxCacheWidth;
@@ -147,7 +164,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
   /// If this is [BoxShape.circle] then [borderRadius] is ignored.
   final BoxShape shape;
 
-  /// Creates this widget that isolates repaints.
+  /// isolates image repaints.
   final bool addRepaintBoundaries;
 
   /// This should only be enabled for images that must be in memory
@@ -259,6 +276,14 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
   ///  * [BlendMode], which includes an illustration of the effect of each blend mode.
   final BlendMode? colorBlendMode;
 
+  /// Resize the image to the given values [width] and/or [height] before painting
+  ///
+  /// This will reduce raster thread usage when using high-resolution images
+  /// with a slight increase in memory
+  ///
+  /// Animated images wouldn't resize
+  final bool resizeImage;
+
   final DisposableImageProvider _provider;
 
   /// Remove all cached images form device storage.
@@ -274,15 +299,30 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
 class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
     with SingleTickerProviderStateMixin {
   late final AnimationController fadeAnimationController;
+  late final String _sizeKey;
 
   @override
   void initState() {
+    _sizeKey = uiImageSizekey(widget.width?.toInt(), widget.height?.toInt());
+
+    addImageSize();
+
     fadeAnimationController = AnimationController(
       vsync: this,
       duration: widget.fadeDuration,
-      value: ref.read(widget._provider).uiImage == null ? 0.0 : 1.0,
+      value: ref.read(widget._provider).uiImages.isEmpty ? 0.0 : 1.0,
     );
+
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant final DisposableCachedImage oldWidget) {
+    if (oldWidget.width != widget.width || oldWidget.height != widget.height) {
+      updateImageSize();
+    }
+
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -322,18 +362,22 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
     }
 
     if (providerState.error != null) {
-      Widget error = const SizedBox();
-
       if (widget.onError != null) {
-        error = widget.onError!(
+        return widget.onError!(
           context,
           providerState.error!,
           providerState.stackTrace!,
           () => ref.refresh(widget._provider.notifier),
         );
+      } else {
+        debugPrint(
+          '''DisposableCachedImage : unhandled error
+          ${providerState.error}
+          ${providerState.stackTrace}
+          ''',
+        );
+        return const SizedBox();
       }
-
-      return error;
     }
 
     fadeAnimationController.forward();
@@ -341,7 +385,9 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
     final imageWidget = _RawImage(
       key: widget.key,
       opacity: fadeAnimationController,
-      image: providerState.uiImage!,
+      image: widget.resizeImage
+          ? providerState.getImage(_sizeKey)
+          : providerState.uiImages['']!,
       invertColors: widget.invertColors,
       matchTextDirection: widget.matchTextDirection,
       repeat: widget.repeat,
@@ -376,6 +422,26 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
     }
 
     return imageWidget;
+  }
+
+  void addImageSize() {
+    if (!widget.resizeImage) return;
+
+    ref.read(widget._provider.notifier).addResizedImage(
+          _sizeKey,
+          widget.width?.toInt(),
+          widget.isDynamicHeight ? null : widget.height?.toInt(),
+        );
+  }
+
+  void updateImageSize() {
+    if (!widget.resizeImage) return;
+
+    ref.read(widget._provider.notifier).updateResizedImage(
+          _sizeKey,
+          widget.width?.toInt(),
+          widget.isDynamicHeight ? null : widget.height?.toInt(),
+        );
   }
 
   static double? _getDynamicHeight({

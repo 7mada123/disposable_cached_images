@@ -2,14 +2,18 @@ part of disposable_cached_images;
 
 class _ImageProviderArguments {
   final int? maxCacheWidth, maxCacheHeight;
+  final int? widgetWidth, widgetHeight;
   final Map<String, String>? headers;
-  final bool keepAlive;
+  final bool keepAlive, resizeImage;
   final String image;
 
   const _ImageProviderArguments({
+    required final this.resizeImage,
     required final this.image,
     final this.maxCacheWidth,
     final this.maxCacheHeight,
+    final this.widgetHeight,
+    final this.widgetWidth,
     final this.headers,
     final this.keepAlive = false,
   });

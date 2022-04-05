@@ -14,8 +14,6 @@ final _networkImageProvider = StateNotifierProvider.autoDispose
 });
 
 class _NetworkImageProvider extends _BaseImageProvider {
-  final httpClient = http.Client();
-
   _NetworkImageProvider(
     final Reader read,
     final _ImageProviderArguments providerArguments,
@@ -26,7 +24,6 @@ class _NetworkImageProvider extends _BaseImageProvider {
 
   @override
   void dispose() {
-    httpClient.close();
     read(imageDataBaseProvider).cancleImageDownload(providerArguments.image);
     super.dispose();
   }
@@ -53,8 +50,6 @@ class _NetworkImageProvider extends _BaseImageProvider {
         final bytes = await read(imageDataBaseProvider).getBytes(key);
 
         if (bytes != null) {
-          httpClient.close();
-
           imageInfo = imageInfo.copyWith(imageBytes: bytes);
 
           await handelImageProvider();
@@ -71,12 +66,9 @@ class _NetworkImageProvider extends _BaseImageProvider {
 
   Future<void> handelNetworkImage() async {
     final response = await read(imageDataBaseProvider).getImageFromUrl(
-      httpClient,
       providerArguments.image,
       providerArguments.headers,
     );
-
-    httpClient.close();
 
     if (response is! Uint8List) throw response;
 
@@ -106,8 +98,6 @@ class _NetworkImageProvider extends _BaseImageProvider {
 
     final originalFrameInfo = await originalCodec.getNextFrame();
 
-    descriptor.dispose();
-
     imageInfo = imageInfo.copyWith(
       height: originalFrameInfo.image.height,
       width: originalFrameInfo.image.width,
@@ -118,12 +108,17 @@ class _NetworkImageProvider extends _BaseImageProvider {
     if (originalCodec.frameCount > 1) {
       read(_usedImageProvider).add(imageInfo);
       read(imageDataBaseProvider).add(imageInfo);
+      descriptor.dispose();
+
+      isAnimatedImage = true;
 
       return _handelAnimatedImage(
         originalCodec,
         image: originalFrameInfo.image,
       );
     }
+
+    isAnimatedImage = false;
 
     final targetHeight = getTargetSize(
       providerArguments.maxCacheHeight,
@@ -136,6 +131,16 @@ class _NetworkImageProvider extends _BaseImageProvider {
     );
 
     originalCodec.dispose();
+
+    if (targetWidth == null && targetHeight == null) {
+      descriptor.dispose();
+      read(imageDataBaseProvider).add(imageInfo);
+
+      if (mounted) _onDownloadedImage(originalFrameInfo.image);
+
+      return;
+    }
+
     originalFrameInfo.image.dispose();
 
     final resizedCodec = await descriptor.instantiateCodec(
@@ -144,6 +149,8 @@ class _NetworkImageProvider extends _BaseImageProvider {
     );
 
     final resizedFrameInfo = await resizedCodec.getNextFrame();
+
+    descriptor.dispose();
 
     final resizedBytes = (await resizedFrameInfo.image.toByteData(
       format: ui.ImageByteFormat.png,
@@ -160,25 +167,32 @@ class _NetworkImageProvider extends _BaseImageProvider {
     resizedCodec.dispose();
 
     if (mounted) {
-      state = state.copyWith(
-        isLoading: false,
-        height: imageInfo.height,
-        width: imageInfo.width,
-        uiImage: resizedFrameInfo.image,
-      );
+      _onDownloadedImage(resizedFrameInfo.image);
     } else {
       resizedFrameInfo.image.dispose();
     }
 
-    read(_usedImageProvider).add(imageInfo);
     read(imageDataBaseProvider).add(imageInfo);
   }
-}
 
-int? getTargetSize(final int? target, int origanl) {
-  if (target != null && target > 0 && target < origanl) {
-    return target;
-  } else {
-    return null;
+  void _onDownloadedImage(final ui.Image image) {
+    state.uiImages.putIfAbsent('', () => image);
+
+    if (providerArguments.resizeImage) {
+      addResizedImage(
+        uiImageSizekey(
+          providerArguments.widgetWidth,
+          providerArguments.widgetHeight,
+        ),
+        providerArguments.widgetWidth,
+        providerArguments.widgetHeight,
+      );
+    } else {
+      state = state.copyWith(
+        isLoading: false,
+        height: imageInfo.height,
+        width: imageInfo.width,
+      );
+    }
   }
 }

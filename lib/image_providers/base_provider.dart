@@ -5,11 +5,16 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
   final _ImageProviderArguments providerArguments;
   final String key;
 
-  late ImageInfoData imageInfo;
+  late final bool isAnimatedImage;
+
+  ImageInfoData imageInfo = const ImageInfoData.init('');
 
   @override
   void dispose() {
-    state.uiImage?.dispose();
+    for (final image in state.uiImages.values) {
+      image.dispose();
+    }
+
     super.dispose();
   }
 
@@ -53,9 +58,16 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
     final ui.Codec codec, {
     required final ui.Image image,
   }) async {
-    state.uiImage?.dispose();
+    state.uiImages.update(
+      '',
+      (final oldImage) {
+        oldImage.dispose();
+        return image;
+      },
+      ifAbsent: () => image,
+    );
 
-    state = state.copyWith(isLoading: false, uiImage: image);
+    state = state.copyWith(isLoading: false);
 
     final delayed = Stopwatch()..start();
 
@@ -103,17 +115,117 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
 
     // don't resize animated images
     if (codec.frameCount > 1) {
+      isAnimatedImage = true;
       return _handelAnimatedImage(codec, image: frameInfo.image);
     }
 
+    isAnimatedImage = false;
+
+    state.uiImages.putIfAbsent('', () => frameInfo.image);
+
     codec.dispose();
+
+    if (providerArguments.resizeImage) {
+      return addResizedImage(
+        uiImageSizekey(
+          providerArguments.widgetWidth,
+          providerArguments.widgetHeight,
+        ),
+        providerArguments.widgetWidth,
+        providerArguments.widgetHeight,
+      );
+    }
 
     state = state.copyWith(
       isLoading: false,
-      uiImage: frameInfo.image,
       height: frameInfo.image.height,
       width: frameInfo.image.width,
     );
+  }
+
+  Future<void> addResizedImage(
+    final String key,
+    final int? width,
+    final int? height,
+  ) async {
+    if (state.uiImages.isEmpty ||
+        isAnimatedImage ||
+        state.uiImages.containsKey(key)) return;
+
+    final tWidth = getTargetSize(width, imageInfo.width!);
+    final tHeight = getTargetSize(height, imageInfo.height!);
+
+    if (tHeight == null && tWidth == null) return;
+
+    final descriptor = await getDescriptor(imageInfo.imageBytes!);
+
+    final codec = await descriptor.instantiateCodec(
+      targetHeight: tHeight,
+      targetWidth: tWidth,
+    );
+
+    final frameInfo = await codec.getNextFrame();
+
+    if (mounted) {
+      state.uiImages.putIfAbsent(key, () => frameInfo.image);
+      state = state.copyWith(isLoading: false);
+    } else {
+      frameInfo.image.dispose();
+    }
+
+    descriptor.dispose();
+    codec.dispose();
+  }
+
+  Future<void> updateResizedImage(
+    final String key,
+    final int? width,
+    final int? height,
+  ) async {
+    if (state.uiImages.isEmpty ||
+        isAnimatedImage ||
+        !state.uiImages.keys.contains(key)) return;
+
+    final tWidth = getTargetSize(width, imageInfo.width!);
+    final tHeight = getTargetSize(height, imageInfo.height!);
+
+    if (tHeight == null && tWidth == null) {
+      WidgetsBinding.instance!.addPostFrameCallback((final _) {
+        state.uiImages.update(key, (final oldImage) {
+          oldImage.dispose();
+
+          return state.uiImages['']!.clone();
+        });
+
+        state = state.copyWith(isLoading: false);
+      });
+
+      return;
+    }
+
+    final descriptor = await getDescriptor(imageInfo.imageBytes!);
+
+    final codec = await descriptor.instantiateCodec(
+      targetHeight: tHeight,
+      targetWidth: tWidth,
+    );
+
+    final frameInfo = await codec.getNextFrame();
+
+    if (mounted) {
+      state.uiImages.update(key, (final oldImage) {
+        oldImage.dispose();
+
+        return frameInfo.image;
+      });
+
+      state = state.copyWith(isLoading: false);
+    } else {
+      frameInfo.image.dispose();
+    }
+
+    descriptor.dispose();
+    codec.dispose();
   }
 }
 
@@ -128,4 +240,16 @@ extension on String {
     return substring(0, length > 255 ? 255 : length)
         .replaceAll(illegalFilenameCharacters, '');
   }
+}
+
+int? getTargetSize(final int? target, final int origanl) {
+  if (target != null && target > 0 && target < origanl) {
+    return target;
+  } else {
+    return null;
+  }
+}
+
+String uiImageSizekey(final int? width, final int? height) {
+  return '${height}x$width';
 }
