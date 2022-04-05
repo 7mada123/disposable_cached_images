@@ -45,8 +45,8 @@ class _LocalImageProvider extends _BaseImageProvider {
       );
 
       read(_usedImageProvider).add(imageInfo);
-    } catch (e) {
-      onImageError(e);
+    } catch (e, s) {
+      onImageError(e, s);
     }
   }
 }

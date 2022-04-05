@@ -64,9 +64,8 @@ class _NetworkImageProvider extends _BaseImageProvider {
       }
 
       read(_usedImageProvider).add(imageInfo);
-    } catch (e) {
-      httpClient.close();
-      onImageError(e);
+    } catch (e, s) {
+      onImageError(e, s);
     }
   }
 

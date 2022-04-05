@@ -17,7 +17,7 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
     required final this.read,
     required final this.providerArguments,
   })  : key = providerArguments.image.key,
-        super(const _ImageProviderState.init()) {
+        super(_ImageProviderState.init()) {
     final usedImageInfo = read(_usedImageProvider).getImageInfo(key);
 
     if (usedImageInfo != null) {
@@ -39,13 +39,13 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
 
   Future<void> getImage();
 
-  void onImageError(final Object e) {
+  void onImageError(final Object e, final StackTrace stackTrace) {
     if (!mounted) return;
 
     state = state.copyWith(
       isLoading: false,
       error: e,
-      stackTrace: StackTrace.current,
+      stackTrace: stackTrace,
     );
   }
 
