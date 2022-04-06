@@ -1,3 +1,7 @@
+## 1.0.5+1
+
+Fix issue when images do not appear with `resizeImage` enabled
+
 ## 1.0.5
 
 ### performance improvement :fire:

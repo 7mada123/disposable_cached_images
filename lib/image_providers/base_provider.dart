@@ -155,8 +155,6 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
     final tWidth = getTargetSize(width, imageInfo.width!);
     final tHeight = getTargetSize(height, imageInfo.height!);
 
-    if (tHeight == null && tWidth == null) return;
-
     final descriptor = await getDescriptor(imageInfo.imageBytes!);
 
     final codec = await descriptor.instantiateCodec(
