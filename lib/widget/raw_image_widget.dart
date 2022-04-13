@@ -159,11 +159,9 @@ class _RenderImage extends RenderImage {
     final rect = offset & size;
 
     return Path()
-      ..addOval(
-        Rect.fromCircle(
-          center: rect.center,
-          radius: rect.shortestSide / 2.0,
-        ),
-      );
+      ..addOval(Rect.fromCircle(
+        center: rect.center,
+        radius: rect.shortestSide / 2.0,
+      ));
   }
 }

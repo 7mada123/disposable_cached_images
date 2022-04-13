@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
@@ -34,9 +35,16 @@ class _ImageDataBase extends ImageCacheManger {
     final cacheKeysFile = File(cachePath + keysFile);
 
     if (cacheKeysFile.existsSync()) {
-      final fileStr = cacheKeysFile.readAsStringSync().replaceAll('}{', ',');
+      try {
+        final fileStr = cacheKeysFile.readAsStringSync().replaceAll('}{', ',');
 
-      fileContent = fileStr.isNotEmpty ? Map.from(json.decode(fileStr)) : {};
+        fileContent = fileStr.isNotEmpty ? Map.from(json.decode(fileStr)) : {};
+      } catch (e) {
+        debugPrint(e.toString());
+        cacheKeysFile.deleteSync();
+        cacheKeysFile.createSync();
+        fileContent = {};
+      }
     } else {
       cacheKeysFile.createSync(recursive: true);
       fileContent = {};
