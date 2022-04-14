@@ -19,10 +19,7 @@ class _ImageDataBase extends ImageCacheManger {
 
   static late String cachePath;
 
-  static late final SendPort fileWriterPort;
-  static late final SendPort fileReadePrort;
-  static late final SendPort networkImagePrort;
-  static late final SendPort networkImageCanclePrort;
+  static late final SendPort imageIsolateSender;
 
   const _ImageDataBase();
 
@@ -50,34 +47,14 @@ class _ImageDataBase extends ImageCacheManger {
       fileContent = {};
     }
 
-    /// Isolate for writing images to device storage
-    final ReceivePort dataWriterIoslatePort = ReceivePort();
+    /// Isolate for handeling network and io oprations
+    final ReceivePort receivePort = ReceivePort();
     await Isolate.spawn<List<dynamic>>(
-      dataWriterIoslate,
-      [dataWriterIoslatePort.sendPort, cachePath],
+      imagesIsolate,
+      [receivePort.sendPort, cachePath],
     );
-    fileWriterPort = await dataWriterIoslatePort.first;
-    dataWriterIoslatePort.close();
-
-    /// Isolate for reading images from device storage
-    final ReceivePort dataReaderIoslatePort = ReceivePort();
-    await Isolate.spawn<List<dynamic>>(
-      dataReaderIoslate,
-      [dataReaderIoslatePort.sendPort, cachePath],
-    );
-    fileReadePrort = await dataReaderIoslatePort.first;
-    dataReaderIoslatePort.close();
-
-    /// Isolate for getting images bytes data from url
-    final ReceivePort connectionPort = ReceivePort();
-    final ReceivePort canclePort = ReceivePort();
-    await Isolate.spawn<List<SendPort>>(
-      httpIoslate,
-      [connectionPort.sendPort, canclePort.sendPort],
-    );
-    networkImagePrort = await connectionPort.first;
-    networkImageCanclePrort = await canclePort.first;
-    connectionPort.close();
+    imageIsolateSender = await receivePort.first;
+    receivePort.close();
   }
 
   @override
@@ -86,7 +63,7 @@ class _ImageDataBase extends ImageCacheManger {
 
     fileContent.putIfAbsent(imageInfo.key, () => imageInfo.sizeToMap());
 
-    fileWriterPort.send(imageInfo);
+    imageIsolateSender.send([_IsolateOprations.write, imageInfo]);
   }
 
   @override
@@ -104,7 +81,8 @@ class _ImageDataBase extends ImageCacheManger {
 
     final fileReceivePort = ReceivePort();
 
-    fileReadePrort.send([key, fileReceivePort.sendPort]);
+    imageIsolateSender
+        .send([_IsolateOprations.read, key, fileReceivePort.sendPort]);
 
     final bytes = await fileReceivePort.first;
 
@@ -144,8 +122,8 @@ class _ImageDataBase extends ImageCacheManger {
   ) async {
     final imageReciverPort = ReceivePort();
 
-    networkImagePrort.send(
-      [url, imageReciverPort.sendPort, headers],
+    imageIsolateSender.send(
+      [_IsolateOprations.download, url, imageReciverPort.sendPort, headers],
     );
 
     final response = await imageReciverPort.first;
@@ -157,108 +135,104 @@ class _ImageDataBase extends ImageCacheManger {
 
   @override
   void cancleImageDownload(final String url) {
-    networkImageCanclePrort.send(url);
+    imageIsolateSender.send([_IsolateOprations.cancleDownload, url]);
   }
 
   static bool isContainKey(final String key) => fileContent.containsKey(key);
 }
 
-void dataWriterIoslate(final List<dynamic> values) {
+void imagesIsolate(final List<dynamic> arg) {
   final ReceivePort port = ReceivePort();
 
-  final SendPort sendPort = values[0];
+  final Map<String, http.Client> connectios = {};
 
-  final String path = values[1];
+  final SendPort sendPort = arg[0];
+
+  final String path = arg[1];
 
   sendPort.send(port.sendPort);
 
   final cacheKeysFile = File(path + "cache_keys.json");
 
-  port.listen((final message) {
-    final ImageInfoData imageInfo = message;
+  final keysIoSink = cacheKeysFile.openWrite(mode: FileMode.writeOnlyAppend);
 
-    final imageBytesFile = File(path + imageInfo.key);
+  port.listen((final message) async {
+    final _IsolateOprations opration = message[0];
 
-    imageBytesFile.createSync();
+    switch (opration) {
+      case _IsolateOprations.write:
+        final ImageInfoData imageInfo = message[1];
 
-    imageBytesFile.writeAsBytesSync(
-      imageInfo.imageBytes!,
-      mode: FileMode.writeOnly,
-    );
+        final imageBytesFile = File(path + imageInfo.key);
 
-    cacheKeysFile.writeAsStringSync(
-      json.encode({imageInfo.key: imageInfo.sizeToMap()}),
-      mode: FileMode.writeOnlyAppend,
-    );
-  });
-}
+        imageBytesFile.createSync();
 
-void dataReaderIoslate(final List<dynamic> values) {
-  final ReceivePort port = ReceivePort();
+        await imageBytesFile.writeAsBytes(
+          imageInfo.imageBytes!,
+          mode: FileMode.writeOnly,
+        );
 
-  final SendPort sendPort = values[0];
+        keysIoSink.write(json.encode({imageInfo.key: imageInfo.sizeToMap()}));
 
-  final String cachePath = values[1];
+        break;
+      case _IsolateOprations.read:
+        final String fileName = message[1];
 
-  sendPort.send(port.sendPort);
+        final SendPort fileSendPort = message[2];
 
-  port.listen((final message) {
-    final String fileName = message[0];
+        final data = File(path + fileName).readAsBytesSync();
 
-    final SendPort fileSendPort = message[1];
+        fileSendPort.send(data);
 
-    final data = File(cachePath + fileName).readAsBytesSync();
+        break;
+      case _IsolateOprations.cancleDownload:
+        final client = connectios[message[1]];
 
-    fileSendPort.send(data);
-  });
-}
+        if (client == null) return;
 
-void httpIoslate(final List<SendPort> receivePort) {
-  final ReceivePort callPort = ReceivePort();
-  final ReceivePort cancelPort = ReceivePort();
+        client.close();
+        connectios.remove(message[1]);
 
-  receivePort[0].send(callPort.sendPort);
-  receivePort[1].send(cancelPort.sendPort);
+        break;
+      case _IsolateOprations.download:
+        final client = http.Client();
 
-  final Map<String, http.Client> connectios = {};
+        final String url = message[1];
 
-  cancelPort.listen((final message) {
-    final client = connectios[message];
+        final SendPort sendPort = message[2];
 
-    if (client == null) return;
+        final Map<String, String>? headers = message[3];
 
-    client.close();
-    connectios.remove(message);
-  });
+        connectios.putIfAbsent(url, () => client);
 
-  callPort.listen((final message) async {
-    final client = http.Client();
+        try {
+          final response = await client.get(
+            Uri.parse(url),
+            headers: headers,
+          );
 
-    final String url = message[0];
+          client.close();
+          connectios.remove(url);
 
-    final SendPort sendPort = message[1];
+          if (response.statusCode == 404) {
+            sendPort.send(Exception('Image not found'));
+            return;
+          }
 
-    final Map<String, String>? headers = message[2];
+          sendPort.send(response.bodyBytes);
+        } catch (e) {
+          sendPort.send(e);
+        }
 
-    connectios.putIfAbsent(url, () => client);
-
-    try {
-      final response = await client.get(
-        Uri.parse(url),
-        headers: headers,
-      );
-
-      client.close();
-      connectios.remove(url);
-
-      if (response.statusCode == 404) {
-        sendPort.send(Exception('Image not found'));
-        return;
-      }
-
-      sendPort.send(response.bodyBytes);
-    } catch (e) {
-      sendPort.send(e);
+        break;
+      default:
     }
   });
+}
+
+enum _IsolateOprations {
+  read,
+  write,
+  download,
+  cancleDownload,
 }
