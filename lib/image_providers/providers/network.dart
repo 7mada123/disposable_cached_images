@@ -82,9 +82,9 @@ class _NetworkImageProvider extends BaseImageProvider
   }
 
   Future<void> handelDownloadedImageSize(final Uint8List bytes) async {
-    await setDescriptor(bytes);
+    final descriptor = await getImageDescriptor(bytes);
 
-    final originalCodec = await descriptor!.instantiateCodec();
+    final originalCodec = await descriptor.instantiateCodec();
 
     final originalFrameInfo = await originalCodec.getNextFrame();
 
@@ -99,6 +99,8 @@ class _NetworkImageProvider extends BaseImageProvider
       read(_usedImageProvider).add(imageInfo);
       read(imageDataBaseProvider).add(imageInfo);
 
+      descriptor.dispose();
+
       isAnimatedImage = true;
 
       return _handelAnimatedImage(
@@ -106,8 +108,6 @@ class _NetworkImageProvider extends BaseImageProvider
         image: originalFrameInfo.image,
       );
     }
-
-    isAnimatedImage = false;
 
     final targetHeight = getTargetSize(
       providerArguments.maxCacheHeight,
@@ -131,7 +131,7 @@ class _NetworkImageProvider extends BaseImageProvider
 
     originalFrameInfo.image.dispose();
 
-    final resizedCodec = await descriptor!.instantiateCodec(
+    final resizedCodec = await descriptor.instantiateCodec(
       targetHeight: targetHeight,
       targetWidth: targetWidth,
     );
@@ -144,10 +144,6 @@ class _NetworkImageProvider extends BaseImageProvider
         .buffer
         .asUint8List();
 
-    descriptor!.dispose();
-    descriptor = null;
-    await setDescriptor(resizedBytes);
-
     imageInfo = imageInfo.copyWith(
       height: resizedFrameInfo.image.height,
       width: resizedFrameInfo.image.width,
@@ -155,6 +151,7 @@ class _NetworkImageProvider extends BaseImageProvider
     );
 
     resizedCodec.dispose();
+    descriptor.dispose();
 
     if (mounted) {
       _onDownloadedImage(resizedFrameInfo.image);

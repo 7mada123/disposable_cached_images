@@ -5,11 +5,9 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
   final _ImageProviderArguments providerArguments;
   final String key;
 
-  late final bool isAnimatedImage;
+  bool isAnimatedImage = false;
 
   ImageInfoData imageInfo = const ImageInfoData.init('');
-
-  ui.ImageDescriptor? descriptor;
 
   @override
   void dispose() {
@@ -29,8 +27,6 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
 
     if (usedImageInfo != null) {
       imageInfo = usedImageInfo;
-
-      descriptor = usedImageInfo.imageDescriptor;
 
       state = state.copyWith(
         isLoading: true,
@@ -88,28 +84,26 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
     return _handelAnimatedImage(codec, image: newFrame.image);
   }
 
-  Future<void> setDescriptor(final Uint8List bytes) async {
-    if (descriptor != null) return;
-
+  Future<ui.ImageDescriptor> getImageDescriptor(final Uint8List bytes) async {
     final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
 
-    descriptor = await ui.ImageDescriptor.encoded(buffer);
+    final descriptor = await ui.ImageDescriptor.encoded(buffer);
 
     buffer.dispose();
 
-    imageInfo = imageInfo.copyWith(imageDescriptor: descriptor);
-
-    read(_usedImageProvider).add(imageInfo);
+    return descriptor;
   }
 
   Future<void> handelImageProvider({
     final void Function(ui.Image)? onImage,
   }) async {
-    await setDescriptor(imageInfo.imageBytes!);
+    final descriptor = await getImageDescriptor(imageInfo.imageBytes!);
 
-    final codec = await descriptor!.instantiateCodec();
+    final codec = await descriptor.instantiateCodec();
 
     final frameInfo = await codec.getNextFrame();
+
+    descriptor.dispose();
 
     if (onImage != null) onImage(frameInfo.image);
 
@@ -124,8 +118,6 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
       isAnimatedImage = true;
       return _handelAnimatedImage(codec, image: frameInfo.image);
     }
-
-    isAnimatedImage = false;
 
     state.uiImages.putIfAbsent('', () => frameInfo.image);
 
@@ -161,14 +153,16 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
     final tWidth = getTargetSize(width, imageInfo.width!);
     final tHeight = getTargetSize(height, imageInfo.height!);
 
-    await setDescriptor(imageInfo.imageBytes!);
+    final descriptor = await getImageDescriptor(imageInfo.imageBytes!);
 
-    final codec = await descriptor!.instantiateCodec(
+    final codec = await descriptor.instantiateCodec(
       targetHeight: tHeight,
       targetWidth: tWidth,
     );
 
     final frameInfo = await codec.getNextFrame();
+
+    descriptor.dispose();
 
     if (mounted) {
       state.uiImages.putIfAbsent(key, () => frameInfo.image);
@@ -206,9 +200,9 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
       return;
     }
 
-    await setDescriptor(imageInfo.imageBytes!);
+    final descriptor = await getImageDescriptor(imageInfo.imageBytes!);
 
-    final codec = await descriptor!.instantiateCodec(
+    final codec = await descriptor.instantiateCodec(
       targetHeight: tHeight,
       targetWidth: tWidth,
     );
@@ -227,6 +221,7 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
       frameInfo.image.dispose();
     }
 
+    descriptor.dispose();
     codec.dispose();
   }
 }
