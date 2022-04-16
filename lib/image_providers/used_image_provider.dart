@@ -14,6 +14,9 @@ class _UsedImageProviders {
   }
 
   void add(final ImageInfoData imageInfo) {
-    usedImageProvidersList.putIfAbsent(imageInfo.key, () => imageInfo);
+    usedImageProvidersList.putIfAbsent(
+      imageInfo.key,
+      () => imageInfo.withOutBytes(),
+    );
   }
 }

@@ -1,7 +1,7 @@
 part of disposable_cached_images;
 
 final _networkImageProvider = StateNotifierProvider.autoDispose
-    .family<_BaseImageProvider, _ImageProviderState, _ImageProviderArguments>((
+    .family<BaseImageProvider, _ImageProviderState, _ImageProviderArguments>((
   final ref,
   final providerArguments,
 ) {
@@ -13,7 +13,8 @@ final _networkImageProvider = StateNotifierProvider.autoDispose
   );
 });
 
-class _NetworkImageProvider extends _BaseImageProvider {
+class _NetworkImageProvider extends BaseImageProvider
+    with NetworkImageProviderPlatformMixin {
   _NetworkImageProvider(
     final Reader read,
     final _ImageProviderArguments providerArguments,
@@ -21,12 +22,6 @@ class _NetworkImageProvider extends _BaseImageProvider {
           read: read,
           providerArguments: providerArguments,
         );
-
-  @override
-  void dispose() {
-    read(imageDataBaseProvider).cancleImageDownload(providerArguments.image);
-    super.dispose();
-  }
 
   @override
   Future<void> getImage() async {
@@ -65,19 +60,14 @@ class _NetworkImageProvider extends _BaseImageProvider {
   }
 
   Future<void> handelNetworkImage() async {
-    final response = await read(imageDataBaseProvider).getImageFromUrl(
-      providerArguments.image,
-      providerArguments.headers,
-    );
+    final response = await getImageByetsFromUrl();
 
-    if (response is! Uint8List) throw response;
+    imageInfo = imageInfo.copyWith(imageBytes: response);
 
     if (providerArguments.maxCacheHeight != null ||
         providerArguments.maxCacheWidth != null) {
       return handelDownloadedImageSize(response);
     }
-
-    imageInfo = imageInfo.copyWith(imageBytes: response);
 
     return handelImageProvider(
       onImage: (final image) {
@@ -92,9 +82,9 @@ class _NetworkImageProvider extends _BaseImageProvider {
   }
 
   Future<void> handelDownloadedImageSize(final Uint8List bytes) async {
-    final descriptor = await getDescriptor(bytes);
+    await setDescriptor(bytes);
 
-    final originalCodec = await descriptor.instantiateCodec();
+    final originalCodec = await descriptor!.instantiateCodec();
 
     final originalFrameInfo = await originalCodec.getNextFrame();
 
@@ -108,7 +98,6 @@ class _NetworkImageProvider extends _BaseImageProvider {
     if (originalCodec.frameCount > 1) {
       read(_usedImageProvider).add(imageInfo);
       read(imageDataBaseProvider).add(imageInfo);
-      descriptor.dispose();
 
       isAnimatedImage = true;
 
@@ -133,7 +122,6 @@ class _NetworkImageProvider extends _BaseImageProvider {
     originalCodec.dispose();
 
     if (targetWidth == null && targetHeight == null) {
-      descriptor.dispose();
       read(imageDataBaseProvider).add(imageInfo);
 
       if (mounted) _onDownloadedImage(originalFrameInfo.image);
@@ -143,20 +131,22 @@ class _NetworkImageProvider extends _BaseImageProvider {
 
     originalFrameInfo.image.dispose();
 
-    final resizedCodec = await descriptor.instantiateCodec(
+    final resizedCodec = await descriptor!.instantiateCodec(
       targetHeight: targetHeight,
       targetWidth: targetWidth,
     );
 
     final resizedFrameInfo = await resizedCodec.getNextFrame();
 
-    descriptor.dispose();
-
     final resizedBytes = (await resizedFrameInfo.image.toByteData(
       format: ui.ImageByteFormat.png,
     ))!
         .buffer
         .asUint8List();
+
+    descriptor!.dispose();
+    descriptor = null;
+    await setDescriptor(resizedBytes);
 
     imageInfo = imageInfo.copyWith(
       height: resizedFrameInfo.image.height,

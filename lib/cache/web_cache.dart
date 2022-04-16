@@ -7,7 +7,6 @@ import 'dart:html' as html;
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 
 import './interface.dart';
 import '../image_info_data.dart';
@@ -20,8 +19,6 @@ class _WebImageDataBase extends ImageCacheManger {
   static late final Map<String, Map<String, dynamic>> fileContent;
 
   static late final bool _disableWebCache;
-
-  static final Map<String, http.Client> httpClients = {};
 
   const _WebImageDataBase();
 
@@ -144,38 +141,6 @@ class _WebImageDataBase extends ImageCacheManger {
       caches.remove(key);
       _sortedWebKeys.remove(key);
     }
-  }
-
-  @override
-  Future getImageFromUrl(
-    final String url,
-    final Map<String, String>? headers,
-  ) async {
-    final clinet = http.Client();
-
-    httpClients.putIfAbsent(url, () => clinet);
-
-    try {
-      final response = await clinet.get(Uri.parse(url), headers: headers);
-
-      clinet.close();
-      httpClients.remove(url);
-
-      if (response.statusCode == 404) Exception('Image not found');
-
-      return response.bodyBytes;
-    } catch (e) {
-      clinet.close();
-      httpClients.remove(url);
-
-      return e;
-    }
-  }
-
-  @override
-  void cancleImageDownload(final String url) {
-    httpClients[url]?.close();
-    httpClients.remove(url);
   }
 }
 

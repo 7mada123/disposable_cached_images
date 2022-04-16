@@ -1,6 +1,6 @@
 part of disposable_cached_images;
 
-abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
+abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
   final Reader read;
   final _ImageProviderArguments providerArguments;
   final String key;
@@ -8,6 +8,8 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
   late final bool isAnimatedImage;
 
   ImageInfoData imageInfo = const ImageInfoData.init('');
+
+  ui.ImageDescriptor? descriptor;
 
   @override
   void dispose() {
@@ -18,7 +20,7 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
     super.dispose();
   }
 
-  _BaseImageProvider({
+  BaseImageProvider({
     required final this.read,
     required final this.providerArguments,
   })  : key = providerArguments.image.key,
@@ -27,6 +29,8 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
 
     if (usedImageInfo != null) {
       imageInfo = usedImageInfo;
+
+      descriptor = usedImageInfo.imageDescriptor;
 
       state = state.copyWith(
         isLoading: true,
@@ -84,26 +88,28 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
     return _handelAnimatedImage(codec, image: newFrame.image);
   }
 
-  Future<ui.ImageDescriptor> getDescriptor(final Uint8List bytes) async {
+  Future<void> setDescriptor(final Uint8List bytes) async {
+    if (descriptor != null) return;
+
     final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
 
-    final descriptor = await ui.ImageDescriptor.encoded(buffer);
+    descriptor = await ui.ImageDescriptor.encoded(buffer);
 
     buffer.dispose();
 
-    return descriptor;
+    imageInfo = imageInfo.copyWith(imageDescriptor: descriptor);
+
+    read(_usedImageProvider).add(imageInfo);
   }
 
   Future<void> handelImageProvider({
     final void Function(ui.Image)? onImage,
   }) async {
-    final descriptor = await getDescriptor(imageInfo.imageBytes!);
+    await setDescriptor(imageInfo.imageBytes!);
 
-    final codec = await descriptor.instantiateCodec();
+    final codec = await descriptor!.instantiateCodec();
 
     final frameInfo = await codec.getNextFrame();
-
-    descriptor.dispose();
 
     if (onImage != null) onImage(frameInfo.image);
 
@@ -155,9 +161,9 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
     final tWidth = getTargetSize(width, imageInfo.width!);
     final tHeight = getTargetSize(height, imageInfo.height!);
 
-    final descriptor = await getDescriptor(imageInfo.imageBytes!);
+    await setDescriptor(imageInfo.imageBytes!);
 
-    final codec = await descriptor.instantiateCodec(
+    final codec = await descriptor!.instantiateCodec(
       targetHeight: tHeight,
       targetWidth: tWidth,
     );
@@ -171,7 +177,6 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
       frameInfo.image.dispose();
     }
 
-    descriptor.dispose();
     codec.dispose();
   }
 
@@ -201,9 +206,9 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
       return;
     }
 
-    final descriptor = await getDescriptor(imageInfo.imageBytes!);
+    await setDescriptor(imageInfo.imageBytes!);
 
-    final codec = await descriptor.instantiateCodec(
+    final codec = await descriptor!.instantiateCodec(
       targetHeight: tHeight,
       targetWidth: tWidth,
     );
@@ -222,13 +227,12 @@ abstract class _BaseImageProvider extends StateNotifier<_ImageProviderState> {
       frameInfo.image.dispose();
     }
 
-    descriptor.dispose();
     codec.dispose();
   }
 }
 
 typedef DisposableImageProvider
-    = AutoDisposeStateNotifierProvider<_BaseImageProvider, _ImageProviderState>;
+    = AutoDisposeStateNotifierProvider<BaseImageProvider, _ImageProviderState>;
 
 extension on String {
   /// remove illegal file name characters when saving file

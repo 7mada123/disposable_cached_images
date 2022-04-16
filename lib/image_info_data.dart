@@ -1,35 +1,49 @@
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 /// class to handle the necessary image data
 class ImageInfoData {
   final Uint8List? imageBytes;
   final int? width, height;
   final String key;
+  final ui.ImageDescriptor? imageDescriptor;
 
   const ImageInfoData({
     required final this.height,
     required final this.width,
     required final this.key,
     final this.imageBytes,
+    final this.imageDescriptor,
   });
 
-  ImageInfoData copyWith({
-    final Uint8List? imageBytes,
-    final String? key,
-    final int? height,
-    final int? width,
-  }) {
+  ImageInfoData copyWith(
+      {final Uint8List? imageBytes,
+      final String? key,
+      final int? height,
+      final int? width,
+      final ui.ImageDescriptor? imageDescriptor}) {
     return ImageInfoData(
       imageBytes: imageBytes ?? this.imageBytes,
       height: height ?? this.height,
       width: width ?? this.width,
       key: key ?? this.key,
+      imageDescriptor: imageDescriptor ?? this.imageDescriptor,
+    );
+  }
+
+  ImageInfoData withOutBytes() {
+    return ImageInfoData(
+      height: height,
+      width: width,
+      key: key,
+      imageDescriptor: imageDescriptor,
     );
   }
 
   const ImageInfoData.init(final this.key)
       : imageBytes = null,
         height = null,
+        imageDescriptor = null,
         width = null;
 
   Map<String, int> sizeToMap() {

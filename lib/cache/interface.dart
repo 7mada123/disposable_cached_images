@@ -30,13 +30,6 @@ abstract class ImageCacheManger {
 
   Future<Uint8List> getLocalBytes(final String imagePath);
 
-  Future<dynamic> getImageFromUrl(
-    final String url,
-    final Map<String, String>? headers,
-  );
-
-  void cancleImageDownload(final String url);
-
   /// Clear [DisposableCachedImage] storage cache.
   Future<void> clearCache();
 }

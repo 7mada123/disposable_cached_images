@@ -1,7 +1,7 @@
 part of disposable_cached_images;
 
 final _localImageProvider = StateNotifierProvider.autoDispose
-    .family<_BaseImageProvider, _ImageProviderState, _ImageProviderArguments>((
+    .family<BaseImageProvider, _ImageProviderState, _ImageProviderArguments>((
   final ref,
   final providerArguments,
 ) {
@@ -13,7 +13,7 @@ final _localImageProvider = StateNotifierProvider.autoDispose
   );
 });
 
-class _LocalImageProvider extends _BaseImageProvider {
+class _LocalImageProvider extends BaseImageProvider {
   _LocalImageProvider(
     final Reader read,
     final _ImageProviderArguments providerArguments,
