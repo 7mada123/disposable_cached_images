@@ -1,3 +1,11 @@
+## 1.0.6
+
+Decode images sequentially not parallel to improve performance when uploading multiple images at the same time
+
+combine isolates into one
+
+handling corrupted keys file
+
 ## 1.0.5+1
 
 Fix issue when images do not appear with `resizeImage` enabled
