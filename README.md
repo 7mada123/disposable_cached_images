@@ -155,8 +155,6 @@ runAppWithDisposableCachedImage(
 
 > In both cases the images will be saved in memory as variables, and the web local storage cache should not be enabled if your application uses many images because of the local storage size limit, prefer to use Cache-Control HTTP header.
 
-> The performance of the web version is not good and needs improvements, please contribute to the repo if you are familiar with Web Workers
-
 ## How it works
 
 The package uses [RawImage](https://api.flutter.dev/flutter/widgets/RawImage-class.html) with [dart-ui-Image](https://api.flutter.dev/flutter/dart-ui/Image-class.html) directly without the need for [ImageProvider](https://api.flutter.dev/flutter/painting/ImageProvider-class.html)
