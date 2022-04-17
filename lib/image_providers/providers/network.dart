@@ -82,84 +82,35 @@ class _NetworkImageProvider extends BaseImageProvider
   }
 
   Future<void> handelDownloadedImageSize(final Uint8List bytes) async {
-    final descriptor = await getImageDescriptor(bytes);
+    final _completer = Completer<_ImageResolverResult>();
 
-    final originalCodec = await descriptor.instantiateCodec();
+    _ImageDecoder.scheduleWithResizedBytes(
+      bytes: bytes,
+      completer: _completer,
+      height: providerArguments.maxCacheHeight,
+      width: providerArguments.maxCacheWidth,
+    );
 
-    final originalFrameInfo = await originalCodec.getNextFrame();
+    final result = await _completer.future;
 
     imageInfo = imageInfo.copyWith(
-      height: originalFrameInfo.image.height,
-      width: originalFrameInfo.image.width,
-      imageBytes: bytes,
+      height: result.image.height,
+      width: result.image.width,
+      imageBytes: result.resizedBytes,
     );
-
-    // don't resize animated images
-    if (originalCodec.frameCount > 1) {
-      read(_usedImageProvider).add(imageInfo);
-      read(imageDataBaseProvider).add(imageInfo);
-
-      descriptor.dispose();
-
-      isAnimatedImage = true;
-
-      return _handelAnimatedImage(
-        originalCodec,
-        image: originalFrameInfo.image,
-      );
-    }
-
-    final targetHeight = getTargetSize(
-      providerArguments.maxCacheHeight,
-      originalFrameInfo.image.height,
-    );
-
-    final targetWidth = getTargetSize(
-      providerArguments.maxCacheWidth,
-      originalFrameInfo.image.width,
-    );
-
-    originalCodec.dispose();
-
-    if (targetWidth == null && targetHeight == null) {
-      read(imageDataBaseProvider).add(imageInfo);
-
-      if (mounted) _onDownloadedImage(originalFrameInfo.image);
-
-      return;
-    }
-
-    originalFrameInfo.image.dispose();
-
-    final resizedCodec = await descriptor.instantiateCodec(
-      targetHeight: targetHeight,
-      targetWidth: targetWidth,
-    );
-
-    final resizedFrameInfo = await resizedCodec.getNextFrame();
-
-    final resizedBytes = (await resizedFrameInfo.image.toByteData(
-      format: ui.ImageByteFormat.png,
-    ))!
-        .buffer
-        .asUint8List();
-
-    imageInfo = imageInfo.copyWith(
-      height: resizedFrameInfo.image.height,
-      width: resizedFrameInfo.image.width,
-      imageBytes: resizedBytes,
-    );
-
-    resizedCodec.dispose();
-    descriptor.dispose();
-
-    if (mounted) {
-      _onDownloadedImage(resizedFrameInfo.image);
-    } else {
-      resizedFrameInfo.image.dispose();
-    }
 
     read(imageDataBaseProvider).add(imageInfo);
+
+    if (mounted) {
+      if (result.isAnimated) {
+        return _handelAnimatedImage(result.codec!, image: result.image);
+      } else {
+        _onDownloadedImage(result.image);
+      }
+    } else {
+      result.image.dispose();
+      result.codec?.dispose();
+    }
   }
 
   void _onDownloadedImage(final ui.Image image) {

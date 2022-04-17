@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../../disposable_cached_images.dart';
 
-mixin NetworkImageProviderPlatformMixinn on BaseImageProvider {
+mixin NetworkImageProviderPlatformMixin on BaseImageProvider {
   final client = http.Client();
 
   @override

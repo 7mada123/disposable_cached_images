@@ -9,11 +9,15 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
 
   ImageInfoData imageInfo = const ImageInfoData.init('');
 
+  final completer = Completer<_ImageResolverResult?>();
+
   @override
   void dispose() {
     for (final image in state.uiImages.values) {
       image.dispose();
     }
+
+    if (!completer.isCompleted) completer.complete();
 
     super.dispose();
   }
@@ -84,44 +88,31 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
     return _handelAnimatedImage(codec, image: newFrame.image);
   }
 
-  Future<ui.ImageDescriptor> getImageDescriptor(final Uint8List bytes) async {
-    final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
-
-    final descriptor = await ui.ImageDescriptor.encoded(buffer);
-
-    buffer.dispose();
-
-    return descriptor;
-  }
-
   Future<void> handelImageProvider({
     final void Function(ui.Image)? onImage,
   }) async {
-    final descriptor = await getImageDescriptor(imageInfo.imageBytes!);
+    _ImageDecoder.schedule(
+      bytes: imageInfo.imageBytes!,
+      completer: completer,
+    );
 
-    final codec = await descriptor.instantiateCodec();
+    final result = await completer.future;
 
-    final frameInfo = await codec.getNextFrame();
-
-    descriptor.dispose();
-
-    if (onImage != null) onImage(frameInfo.image);
-
-    if (!mounted) {
-      codec.dispose();
-      frameInfo.image.dispose();
+    if (result == null) {
       return;
     }
 
+    if (onImage != null) onImage(result.image);
+
     // don't resize animated images
-    if (codec.frameCount > 1) {
+    if (result.isAnimated) {
       isAnimatedImage = true;
-      return _handelAnimatedImage(codec, image: frameInfo.image);
+      return _handelAnimatedImage(result.codec!, image: result.image);
     }
 
-    state.uiImages.putIfAbsent('', () => frameInfo.image);
+    state.uiImages.putIfAbsent('', () => result.image);
 
-    codec.dispose();
+    // codec.dispose();
 
     if (providerArguments.resizeImage) {
       return addResizedImage(
@@ -136,8 +127,8 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
 
     state = state.copyWith(
       isLoading: false,
-      height: frameInfo.image.height,
-      width: frameInfo.image.width,
+      height: result.image.height,
+      width: result.image.width,
     );
   }
 
@@ -153,25 +144,23 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
     final tWidth = getTargetSize(width, imageInfo.width!);
     final tHeight = getTargetSize(height, imageInfo.height!);
 
-    final descriptor = await getImageDescriptor(imageInfo.imageBytes!);
+    final _completer = Completer<_ImageResolverResult>();
 
-    final codec = await descriptor.instantiateCodec(
-      targetHeight: tHeight,
-      targetWidth: tWidth,
+    _ImageDecoder.schedule(
+      bytes: imageInfo.imageBytes!,
+      completer: _completer,
+      height: tHeight,
+      width: tWidth,
     );
 
-    final frameInfo = await codec.getNextFrame();
-
-    descriptor.dispose();
+    final result = await _completer.future;
 
     if (mounted) {
-      state.uiImages.putIfAbsent(key, () => frameInfo.image);
+      state.uiImages.putIfAbsent(key, () => result.image);
       state = state.copyWith(isLoading: false);
     } else {
-      frameInfo.image.dispose();
+      result.image.dispose();
     }
-
-    codec.dispose();
   }
 
   Future<void> updateResizedImage(
@@ -200,29 +189,28 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
       return;
     }
 
-    final descriptor = await getImageDescriptor(imageInfo.imageBytes!);
+    final _completer = Completer<_ImageResolverResult>();
 
-    final codec = await descriptor.instantiateCodec(
-      targetHeight: tHeight,
-      targetWidth: tWidth,
+    _ImageDecoder.schedule(
+      bytes: imageInfo.imageBytes!,
+      completer: _completer,
+      height: tHeight,
+      width: tWidth,
     );
 
-    final frameInfo = await codec.getNextFrame();
+    final result = await _completer.future;
 
     if (mounted) {
       state.uiImages.update(key, (final oldImage) {
         oldImage.dispose();
 
-        return frameInfo.image;
+        return result.image;
       });
 
       state = state.copyWith(isLoading: false);
     } else {
-      frameInfo.image.dispose();
+      result.image.dispose();
     }
-
-    descriptor.dispose();
-    codec.dispose();
   }
 }
 

@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
-import 'image_info_data.dart';
+import './image_info_data.dart';
 
 enum _IsolateOprations {
   read,
@@ -58,6 +58,8 @@ class ImagesIsolate {
         .send([_IsolateOprations.clearData, receivePort.sendPort]);
 
     final result = await receivePort.first;
+
+    receivePort.close();
 
     if (result is! String) throw result;
   }

@@ -1,6 +1,7 @@
 library disposable_cached_images;
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -15,6 +16,7 @@ import './image_providers/network_download_mixin/network_download_mixin_stub.dar
     if (dart.library.io) './image_providers/network_download_mixin/network_download_mixin.dart'
     if (dart.library.html) './image_providers/network_download_mixin/network_download_mixin_web.dart';
 
+part 'image_decoder.dart';
 part './image_providers/arguments.dart';
 part './image_providers/base_provider.dart';
 part './image_providers/providers/local.dart';
