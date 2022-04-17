@@ -1,10 +1,10 @@
 ## 1.0.6
 
-Decode images sequentially not parallel to improve performance when uploading multiple images at the same time
+Decode images sequentially not parallel to improve performance when loading multiple images at the same time
 
-combine isolates into one
+Combine isolates into one
 
-handling corrupted keys file
+Handling corrupted keys file
 
 ## 1.0.5+1
 
