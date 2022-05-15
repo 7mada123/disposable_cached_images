@@ -82,16 +82,16 @@ class _NetworkImageProvider extends BaseImageProvider
   }
 
   Future<void> handelDownloadedImageSize(final Uint8List bytes) async {
-    final _completer = Completer<_ImageResolverResult>();
+    final completer = Completer<_ImageResolverResult>();
 
     _ImageDecoder.scheduleWithResizedBytes(
       bytes: bytes,
-      completer: _completer,
+      completer: completer,
       height: providerArguments.maxCacheHeight,
       width: providerArguments.maxCacheWidth,
     );
 
-    final result = await _completer.future;
+    final result = await completer.future;
 
     imageInfo = imageInfo.copyWith(
       height: result.image.height,

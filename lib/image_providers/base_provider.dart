@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 part of disposable_cached_images;
 
 abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
@@ -112,8 +114,6 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
 
     state.uiImages.putIfAbsent('', () => result.image);
 
-    // codec.dispose();
-
     if (providerArguments.resizeImage) {
       return addResizedImage(
         uiImageSizekey(
@@ -144,16 +144,16 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
     final tWidth = getTargetSize(width, imageInfo.width!);
     final tHeight = getTargetSize(height, imageInfo.height!);
 
-    final _completer = Completer<_ImageResolverResult>();
+    final completer = Completer<_ImageResolverResult>();
 
     _ImageDecoder.schedule(
       bytes: imageInfo.imageBytes!,
-      completer: _completer,
+      completer: completer,
       height: tHeight,
       width: tWidth,
     );
 
-    final result = await _completer.future;
+    final result = await completer.future;
 
     if (mounted) {
       state.uiImages.putIfAbsent(key, () => result.image);
@@ -176,7 +176,7 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
     final tHeight = getTargetSize(height, imageInfo.height!);
 
     if (tHeight == null && tWidth == null) {
-      WidgetsBinding.instance!.addPostFrameCallback((final _) {
+      WidgetsBinding.instance.addPostFrameCallback((final _) {
         state.uiImages.update(key, (final oldImage) {
           oldImage.dispose();
 
@@ -189,16 +189,16 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
       return;
     }
 
-    final _completer = Completer<_ImageResolverResult>();
+    final completer = Completer<_ImageResolverResult>();
 
     _ImageDecoder.schedule(
       bytes: imageInfo.imageBytes!,
-      completer: _completer,
+      completer: completer,
       height: tHeight,
       width: tWidth,
     );
 
-    final result = await _completer.future;
+    final result = await completer.future;
 
     if (mounted) {
       state.uiImages.update(key, (final oldImage) {

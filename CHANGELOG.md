@@ -1,3 +1,9 @@
+## 1.0.7
+
+Upgrade minimum Flutter SDK to 3.0.0
+
+Updates external dependencies
+
 ## 1.0.6
 
 Decode images sequentially not parallel to improve performance when loading multiple images at the same time
