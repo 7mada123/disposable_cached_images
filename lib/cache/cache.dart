@@ -26,8 +26,6 @@ class _ImageDataBase extends ImageCacheManger {
 
     final cacheKeysFile = File(cachePath + keysFile);
 
-    await ImagesIsolate.init(cachePath);
-
     if (cacheKeysFile.existsSync()) {
       try {
         final fileStr = cacheKeysFile.readAsStringSync().replaceAll('}{', ',');
@@ -43,6 +41,8 @@ class _ImageDataBase extends ImageCacheManger {
       cacheKeysFile.createSync(recursive: true);
       fileContent = {};
     }
+
+    await ImagesIsolate.init(cachePath);
   }
 
   @override
