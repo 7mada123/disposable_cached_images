@@ -8,14 +8,14 @@ class _ImageProviderArguments {
   final String image;
 
   const _ImageProviderArguments({
-    required final this.resizeImage,
-    required final this.image,
-    final this.maxCacheWidth,
-    final this.maxCacheHeight,
-    final this.widgetHeight,
-    final this.widgetWidth,
-    final this.headers,
-    final this.keepAlive = false,
+    required this.resizeImage,
+    required this.image,
+    this.maxCacheWidth,
+    this.maxCacheHeight,
+    this.widgetHeight,
+    this.widgetWidth,
+    this.headers,
+    this.keepAlive = false,
   });
 
   @override

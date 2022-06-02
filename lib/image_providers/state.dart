@@ -8,8 +8,8 @@ class _ImageProviderState {
   final int? height, width;
 
   const _ImageProviderState({
-    final this.isLoading = false,
-    required final this.uiImages,
+    this.isLoading = false,
+    required this.uiImages,
     this.error,
     this.height,
     this.stackTrace,

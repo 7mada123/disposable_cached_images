@@ -7,10 +7,10 @@ class ImageInfoData {
   final String key;
 
   const ImageInfoData({
-    required final this.height,
-    required final this.width,
-    required final this.key,
-    final this.imageBytes,
+    required this.height,
+    required this.width,
+    required this.key,
+    this.imageBytes,
   });
 
   ImageInfoData copyWith({
@@ -27,7 +27,7 @@ class ImageInfoData {
     );
   }
 
-  const ImageInfoData.init(final this.key)
+  const ImageInfoData.init(this.key)
       : imageBytes = null,
         height = null,
         width = null;

@@ -8,19 +8,16 @@ final _localImageProvider = StateNotifierProvider.autoDispose
   ref.maintainState = providerArguments.keepAlive;
 
   return _LocalImageProvider(
-    ref.read,
-    providerArguments,
+    read: ref.read,
+    providerArguments: providerArguments,
   );
 });
 
 class _LocalImageProvider extends BaseImageProvider {
-  _LocalImageProvider(
-    final Reader read,
-    final _ImageProviderArguments providerArguments,
-  ) : super(
-          read: read,
-          providerArguments: providerArguments,
-        );
+  _LocalImageProvider({
+    required final super.read,
+    required final super.providerArguments,
+  });
 
   @override
   Future<void> getImage() async {

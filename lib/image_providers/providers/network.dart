@@ -8,20 +8,17 @@ final _networkImageProvider = StateNotifierProvider.autoDispose
   ref.maintainState = providerArguments.keepAlive;
 
   return _NetworkImageProvider(
-    ref.read,
-    providerArguments,
+    read: ref.read,
+    providerArguments: providerArguments,
   );
 });
 
 class _NetworkImageProvider extends BaseImageProvider
     with NetworkImageProviderPlatformMixin {
-  _NetworkImageProvider(
-    final Reader read,
-    final _ImageProviderArguments providerArguments,
-  ) : super(
-          read: read,
-          providerArguments: providerArguments,
-        );
+  _NetworkImageProvider({
+    required final super.read,
+    required final super.providerArguments,
+  });
 
   @override
   Future<void> getImage() async {

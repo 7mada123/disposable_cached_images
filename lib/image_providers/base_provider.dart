@@ -25,8 +25,8 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
   }
 
   BaseImageProvider({
-    required final this.read,
-    required final this.providerArguments,
+    required this.read,
+    required this.providerArguments,
   })  : key = providerArguments.image.key,
         super(_ImageProviderState.init()) {
     final usedImageInfo = read(_usedImageProvider).getImageInfo(key);
