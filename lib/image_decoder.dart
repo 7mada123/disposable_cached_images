@@ -8,9 +8,9 @@ class _ImageDecoder {
   static final _queue = Queue<Future<void> Function()>();
 
   static Future<void> _decodeFirstImage() async {
-    await _queue.removeFirst()().timeout(_maxDuration, onTimeout: () {});
-
-    if (_queue.isNotEmpty) return _decodeFirstImage();
+    while (_queue.isNotEmpty) {
+      await _queue.removeFirst()().timeout(_maxDuration, onTimeout: () {});
+    }
 
     _scheduled = false;
   }
