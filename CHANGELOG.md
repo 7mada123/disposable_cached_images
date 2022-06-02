@@ -1,3 +1,11 @@
+## 1.0.8
+
+Fixed issue [#1](https://github.com/7mada123/disposable_cached_images/issues/1)
+> Initialization error on first run
+
+Decoding images iteratively to save space
+> previously was done with recursion
+
 ## 1.0.7
 
 Upgrade minimum Flutter SDK to 3.0.0
