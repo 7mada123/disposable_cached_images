@@ -15,8 +15,8 @@ final _localImageProvider = StateNotifierProvider.autoDispose
 
 class _LocalImageProvider extends BaseImageProvider {
   _LocalImageProvider({
-    required final super.read,
-    required final super.providerArguments,
+    required super.read,
+    required super.providerArguments,
   });
 
   @override

@@ -16,8 +16,8 @@ final _networkImageProvider = StateNotifierProvider.autoDispose
 class _NetworkImageProvider extends BaseImageProvider
     with NetworkImageProviderPlatformMixin {
   _NetworkImageProvider({
-    required final super.read,
-    required final super.providerArguments,
+    required super.read,
+    required super.providerArguments,
   });
 
   @override

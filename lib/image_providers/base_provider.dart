@@ -62,32 +62,33 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
 
   Future<void> _handelAnimatedImage(
     final ui.Codec codec, {
-    required final ui.Image image,
+    required ui.Image image,
   }) async {
-    state.uiImages.update(
-      '',
-      (final oldImage) {
-        oldImage.dispose();
-        return image;
-      },
-      ifAbsent: () => image,
-    );
+    // TODO
+    // test animated images
+    while (mounted) {
+      state.uiImages.update(
+        '',
+        (final oldImage) {
+          oldImage.dispose();
+          return image;
+        },
+        ifAbsent: () => image,
+      );
 
-    state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false);
 
-    final delayed = Stopwatch()..start();
+      final delayed = Stopwatch()..start();
 
-    final newFrame = await codec.getNextFrame();
+      final newFrame = await codec.getNextFrame();
 
-    await Future.delayed(newFrame.duration - delayed.elapsed);
+      image = newFrame.image;
 
-    if (!mounted) {
-      newFrame.image.dispose();
-      codec.dispose();
-      return;
+      await Future.delayed(newFrame.duration - delayed.elapsed);
     }
 
-    return _handelAnimatedImage(codec, image: newFrame.image);
+    image.dispose();
+    codec.dispose();
   }
 
   Future<void> handelImageProvider({
