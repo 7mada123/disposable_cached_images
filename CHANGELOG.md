@@ -1,3 +1,9 @@
+## 1.0.9
+
+Handle image decoding error
+
+Updates external dependencies
+
 ## 1.0.8
 
 Fixed issue [#1](https://github.com/7mada123/disposable_cached_images/issues/1)

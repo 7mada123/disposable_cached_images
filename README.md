@@ -155,6 +155,9 @@ runAppWithDisposableCachedImage(
 
 > In both cases the images will be saved in memory as variables, and the web local storage cache should not be enabled if your application uses many images because of the local storage size limit, prefer to use Cache-Control HTTP header.
 
+### Note :
+the package is only usable for CanvasKit renderer for now, if you try to use it with HTML renderer, some images won't load after disposing of them as mentioned in [#2](https://github.com/7mada123/disposable_cached_images/issues/2)re]()
+
 ## How it works
 
 The package uses [RawImage](https://api.flutter.dev/flutter/widgets/RawImage-class.html) with [dart-ui-Image](https://api.flutter.dev/flutter/dart-ui/Image-class.html) directly without the need for [ImageProvider](https://api.flutter.dev/flutter/painting/ImageProvider-class.html)
