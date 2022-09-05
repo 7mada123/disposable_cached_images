@@ -64,8 +64,6 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
     final ui.Codec codec, {
     required ui.Image image,
   }) async {
-    // TODO
-    // test animated images
     while (mounted) {
       state.uiImages.update(
         '',
