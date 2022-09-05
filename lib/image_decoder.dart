@@ -53,48 +53,52 @@ class _ImageDecoder {
   ) async {
     if (completer.isCompleted) return;
 
-    final descriptor = await _getDescriptor(bytes);
+    try {
+      final descriptor = await _getDescriptor(bytes);
 
-    if (completer.isCompleted) {
+      if (completer.isCompleted) {
+        descriptor.dispose();
+        return;
+      }
+
+      final codec = await descriptor.instantiateCodec(
+        targetHeight: height,
+        targetWidth: width,
+      );
+
+      if (completer.isCompleted) {
+        descriptor.dispose();
+        codec.dispose();
+        return;
+      }
+
+      final frameInfo = await codec.getNextFrame();
+
+      if (completer.isCompleted) {
+        frameInfo.image.dispose();
+        descriptor.dispose();
+        codec.dispose();
+        return;
+      }
+
       descriptor.dispose();
-      return;
-    }
 
-    final codec = await descriptor.instantiateCodec(
-      targetHeight: height,
-      targetWidth: width,
-    );
+      if (codec.frameCount > 1) {
+        completer.complete(_ImageResolverResult(
+          image: frameInfo.image,
+          codec: codec,
+          isAnimated: true,
+        ));
 
-    if (completer.isCompleted) {
-      descriptor.dispose();
+        return;
+      }
+
       codec.dispose();
-      return;
+
+      completer.complete(_ImageResolverResult(image: frameInfo.image));
+    } catch (e) {
+      completer.completeError(e);
     }
-
-    final frameInfo = await codec.getNextFrame();
-
-    if (completer.isCompleted) {
-      frameInfo.image.dispose();
-      descriptor.dispose();
-      codec.dispose();
-      return;
-    }
-
-    descriptor.dispose();
-
-    if (codec.frameCount > 1) {
-      completer.complete(_ImageResolverResult(
-        image: frameInfo.image,
-        codec: codec,
-        isAnimated: true,
-      ));
-
-      return;
-    }
-
-    codec.dispose();
-
-    completer.complete(_ImageResolverResult(image: frameInfo.image));
   }
 
   static Future<void> _getResizedBytesImage(
@@ -103,70 +107,74 @@ class _ImageDecoder {
     final int? width,
     final Completer<_ImageResolverResult?> completer,
   ) async {
-    final descriptor = await _getDescriptor(bytes);
+    try {
+      final descriptor = await _getDescriptor(bytes);
 
-    final codec = await descriptor.instantiateCodec();
+      final codec = await descriptor.instantiateCodec();
 
-    final frameInfo = await codec.getNextFrame();
+      final frameInfo = await codec.getNextFrame();
 
-    if (codec.frameCount > 1) {
+      if (codec.frameCount > 1) {
+        descriptor.dispose();
+
+        completer.complete(_ImageResolverResult(
+          image: frameInfo.image,
+          codec: codec,
+          isAnimated: true,
+          resizedBytes: bytes,
+        ));
+        return;
+      }
+
+      final targetHeight = getTargetSize(
+        height,
+        frameInfo.image.height,
+      );
+
+      final targetWidth = getTargetSize(
+        width,
+        frameInfo.image.width,
+      );
+
+      codec.dispose();
+
+      if (targetHeight == null && targetWidth == null) {
+        descriptor.dispose();
+
+        completer.complete(_ImageResolverResult(
+          image: frameInfo.image,
+          resizedBytes: bytes,
+        ));
+        return;
+      }
+
+      frameInfo.image.dispose();
+
+      final resizedCodec = await descriptor.instantiateCodec(
+        targetHeight: targetHeight,
+        targetWidth: targetWidth,
+      );
+
+      final resizedFrameInfo = await resizedCodec.getNextFrame();
+
+      final resizedBytes = (await resizedFrameInfo.image.toByteData(
+        format: ui.ImageByteFormat.png,
+      ))!
+          .buffer
+          .asUint8List();
+
+      completer.complete(
+        _ImageResolverResult(
+          image: resizedFrameInfo.image,
+          resizedBytes: resizedBytes,
+        ),
+      );
+
       descriptor.dispose();
-
-      completer.complete(_ImageResolverResult(
-        image: frameInfo.image,
-        codec: codec,
-        isAnimated: true,
-        resizedBytes: bytes,
-      ));
-      return;
+      resizedCodec.dispose();
+    } catch (e) {
+      completer.completeError(e);
     }
-
-    final targetHeight = getTargetSize(
-      height,
-      frameInfo.image.height,
-    );
-
-    final targetWidth = getTargetSize(
-      width,
-      frameInfo.image.width,
-    );
-
-    codec.dispose();
-
-    if (targetHeight == null && targetWidth == null) {
-      descriptor.dispose();
-
-      completer.complete(_ImageResolverResult(
-        image: frameInfo.image,
-        resizedBytes: bytes,
-      ));
-      return;
-    }
-
-    frameInfo.image.dispose();
-
-    final resizedCodec = await descriptor.instantiateCodec(
-      targetHeight: targetHeight,
-      targetWidth: targetWidth,
-    );
-
-    final resizedFrameInfo = await resizedCodec.getNextFrame();
-
-    final resizedBytes = (await resizedFrameInfo.image.toByteData(
-      format: ui.ImageByteFormat.png,
-    ))!
-        .buffer
-        .asUint8List();
-
-    completer.complete(
-      _ImageResolverResult(
-        image: resizedFrameInfo.image,
-        resizedBytes: resizedBytes,
-      ),
-    );
-
-    descriptor.dispose();
-    resizedCodec.dispose();
   }
 
   static Future<ui.ImageDescriptor> _getDescriptor(
