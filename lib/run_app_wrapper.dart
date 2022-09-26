@@ -12,7 +12,7 @@ Future<void> runAppWithDisposableCachedImage(
   final Widget app, {
   final List<Override> overrides = const [],
   final List<ProviderObserver>? observers,
-  final bool enableWebCache = false,
+  final bool enableWebCache = true,
 }) async {
   final cache = ImageCacheManger.getPlatformInstance();
 

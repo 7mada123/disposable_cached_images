@@ -2,10 +2,11 @@
 
 import 'dart:async';
 import 'dart:convert';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:idb_shim/idb.dart';
+import 'package:idb_shim/idb_browser.dart';
 
 import './interface.dart';
 import '../image_info_data.dart';
@@ -13,11 +14,13 @@ import '../image_info_data.dart';
 ImageCacheManger getInstance() => const _WebImageDataBase();
 
 class _WebImageDataBase extends ImageCacheManger {
-  static final html.Storage caches = html.window.localStorage;
+  static late final Database _db;
 
   static late final Map<String, Map<String, dynamic>> fileContent;
 
   static late final bool _disableWebCache;
+
+  static const String _storeName = "web_images";
 
   const _WebImageDataBase();
 
@@ -29,25 +32,39 @@ class _WebImageDataBase extends ImageCacheManger {
       return;
     }
 
+    _db = await idbFactoryBrowser.open("app_db.db", version: 1,
+        onUpgradeNeeded: (VersionChangeEvent event) {
+      Database db = event.database;
+      db.createObjectStore(_storeName, autoIncrement: true);
+    });
+
     _disableWebCache = false;
 
-    if (caches.keys.isEmpty) {
+    var txn = _db.transaction(_storeName, "readonly");
+    var store = txn.objectStore(_storeName);
+
+    final res = await store.getAllKeys();
+
+    await txn.completed;
+
+    if (res.isEmpty) {
       fileContent = {};
       return;
     }
 
-    for (final key in caches.keys)
-      if (_webKeyReg.hasMatch(key)) _sortedWebKeys.add(key);
+    final List<String> keys = [];
+
+    for (Object key in res)
+      if (key is String && _webKeyReg.hasMatch(key)) keys.add(key);
+
+    if (keys.isEmpty) {
+      fileContent = {};
+      return;
+    }
 
     fileContent = Map.from(
-      json.decode(_sortedWebKeys.join().replaceAll('}{', ',')),
+      json.decode(keys.join().replaceAll('}{', ',')),
     );
-
-    _sortedWebKeys.sort((final a, final b) {
-      return (json.decode(caches[a]!)['time']).compareTo(
-        json.decode(caches[b]!)['time'],
-      );
-    });
   }
 
   @override
@@ -58,11 +75,10 @@ class _WebImageDataBase extends ImageCacheManger {
 
     try {
       _add(imageInfo);
-    } on html.DomException catch (e) {
-      if (e.message?.contains('exceeded the quota') ?? false) {
-        _removeOld5();
-        _add(imageInfo);
-      }
+    } catch (e, s) {
+      debugPrint(
+          "disposable cached images : added web image to cache error\nerror :: ${e.toString()}");
+      debugPrint(s.toString());
     }
   }
 
@@ -81,9 +97,16 @@ class _WebImageDataBase extends ImageCacheManger {
 
     if (imageInfo == null) return null;
 
-    return Uint8List.fromList(
-      List<int>.from(json.decode(caches[imageInfo.webKey()]!)['bytes']),
-    );
+    var txn = _db.transaction(_storeName, "readonly");
+    var store = txn.objectStore(_storeName);
+
+    final res = await store.getObject(imageInfo.webKey()) as Uint8List?;
+
+    await txn.completed;
+
+    if (res == null) return null;
+
+    return res;
   }
 
   @override
@@ -96,49 +119,35 @@ class _WebImageDataBase extends ImageCacheManger {
   Future<void> clearCache() async {
     fileContent.clear();
 
-    for (final key in _sortedWebKeys) {
-      caches.remove(key);
-      _sortedWebKeys.remove(key);
-    }
+    var txn = _db.transaction(_storeName, "readwrite");
+    var store = txn.objectStore(_storeName);
+
+    await store.clear();
+
+    await txn.completed;
   }
 
   /// Using RegEx for the key so that we don't accidentally use or remove
   /// other values not associated with this package
   static final _webKeyReg = RegExp(
-    r'{"http(s{0,1}).*?(width":\d+,"height":\d+})}',
+    r'{"http(s{0,1}).*?(height":\d+,"width":\d+})}',
   );
 
-  static void _add(final ImageInfoData imageInfo) {
+  static void _add(final ImageInfoData imageInfo) async {
     try {
       final key = imageInfo.webKey();
 
-      caches.putIfAbsent(
+      var txn = _db.transaction(_storeName, "readwrite");
+      var store = txn.objectStore(_storeName);
+
+      await store.put(
+        imageInfo.imageBytes!,
         key,
-        () => json.encode({
-          'bytes': imageInfo.imageBytes!.toList(),
-          'time': DateTime.now().millisecondsSinceEpoch,
-        }),
       );
 
-      _sortedWebKeys.add(key);
+      await txn.completed;
     } catch (e) {
       rethrow;
-    }
-  }
-
-  /// used to remove the old images
-  static final List<String> _sortedWebKeys = [];
-
-  /// Remove the old five images when the local storage reaches the limit
-  static void _removeOld5() {
-    final old5 = _sortedWebKeys.sublist(
-      0,
-      _sortedWebKeys.length > 5 ? 5 : _sortedWebKeys.length,
-    );
-
-    for (final key in old5) {
-      caches.remove(key);
-      _sortedWebKeys.remove(key);
     }
   }
 }
