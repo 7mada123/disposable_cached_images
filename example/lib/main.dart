@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 
 import './image_widgets.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  runAppWithDisposableCachedImage(const MyApp());
+  await DisposableImages.init(enableWebCache: false);
+
+  runApp(const DisposableImages(MyApp()));
 }
 
 class MyApp extends StatelessWidget {

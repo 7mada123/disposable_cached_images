@@ -56,7 +56,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "1.0.9"
+    version: "1.1.0"
   fake_async:
     dependency: transitive
     description:
@@ -96,7 +96,7 @@ packages:
       name: flutter_riverpod
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.4"
+    version: "2.0.1"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -241,7 +241,7 @@ packages:
       name: riverpod
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.3"
+    version: "2.0.1"
   sembast:
     dependency: transitive
     description:

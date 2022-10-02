@@ -7,7 +7,9 @@ import 'package:flutter/material.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  runAppWithDisposableCachedImage(const MyApp());
+  await DisposableImages.init();
+
+  runApp(const DisposableImages(MyApp()));
 }
 
 class MyApp extends StatelessWidget {
