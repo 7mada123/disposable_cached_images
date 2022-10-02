@@ -1,5 +1,5 @@
 import './interface.dart';
 
-ImageCacheManger getInstance() {
+ImageStorageManger getInstance() {
   throw UnsupportedError('unsupported platform');
 }

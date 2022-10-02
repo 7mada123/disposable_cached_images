@@ -5,10 +5,10 @@ final _networkImageProvider = StateNotifierProvider.autoDispose
   final ref,
   final providerArguments,
 ) {
-  ref.maintainState = providerArguments.keepAlive;
+  if (providerArguments.keepAlive) ref.keepAlive();
 
   return _NetworkImageProvider(
-    read: ref.read,
+    ref: ref,
     providerArguments: providerArguments,
   );
 });
@@ -16,14 +16,14 @@ final _networkImageProvider = StateNotifierProvider.autoDispose
 class _NetworkImageProvider extends BaseImageProvider
     with NetworkImageProviderPlatformMixin {
   _NetworkImageProvider({
-    required super.read,
+    required super.ref,
     required super.providerArguments,
   });
 
   @override
   Future<void> getImage() async {
     try {
-      final savedImageInfo = read(imageDataBaseProvider).getImageInfo(key);
+      final savedImageInfo = _imageStorage.getImageInfo(key);
 
       if (savedImageInfo == null) {
         state = state.copyWith(isLoading: true);
@@ -39,7 +39,7 @@ class _NetworkImageProvider extends BaseImageProvider
 
         imageInfo = savedImageInfo;
 
-        final bytes = await read(imageDataBaseProvider).getBytes(key);
+        final bytes = await _imageStorage.getBytes(key);
 
         if (bytes != null) {
           imageInfo = imageInfo.copyWith(imageBytes: bytes);
@@ -50,7 +50,7 @@ class _NetworkImageProvider extends BaseImageProvider
         }
       }
 
-      read(_usedImageProvider).add(imageInfo);
+      ref.read(_usedImageProvider).add(imageInfo);
     } catch (e, s) {
       onImageError(e, s);
     }
@@ -73,7 +73,7 @@ class _NetworkImageProvider extends BaseImageProvider
           width: image.width,
         );
 
-        read(imageDataBaseProvider).add(imageInfo);
+        _imageStorage.add(imageInfo);
       },
     );
   }
@@ -96,7 +96,7 @@ class _NetworkImageProvider extends BaseImageProvider
       imageBytes: result.resizedBytes,
     );
 
-    read(imageDataBaseProvider).add(imageInfo);
+    _imageStorage.add(imageInfo);
 
     if (mounted) {
       if (result.isAnimated) {

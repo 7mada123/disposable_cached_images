@@ -1,24 +1,17 @@
 import 'dart:typed_data';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../image_info_data.dart';
-import './image_cache_stub.dart'
+import 'image_storage_stub.dart'
     if (dart.library.io) './cache.dart'
     if (dart.library.html) './web_cache.dart';
 
-/// Provider for handling image cache
-final imageDataBaseProvider = Provider.autoDispose<ImageCacheManger>(
-  (final ref) => throw UnimplementedError(),
-);
-
 /// The image cache interface
-abstract class ImageCacheManger {
-  static ImageCacheManger getPlatformInstance() {
+abstract class ImageStorageManger {
+  static ImageStorageManger getPlatformInstance() {
     return getInstance();
   }
 
-  const ImageCacheManger();
+  const ImageStorageManger();
 
   Future<void> init(final bool enableWebCache);
 
@@ -29,6 +22,8 @@ abstract class ImageCacheManger {
   Future<Uint8List?> getBytes(final String key);
 
   Future<Uint8List> getLocalBytes(final String imagePath);
+
+  Future<Uint8List> getAssetBytes(final String imagePath);
 
   /// Clear [DisposableCachedImage] storage cache.
   Future<void> clearCache();

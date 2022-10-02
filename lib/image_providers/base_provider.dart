@@ -3,7 +3,7 @@
 part of disposable_cached_images;
 
 abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
-  final Reader read;
+  final Ref ref;
   final _ImageProviderArguments providerArguments;
   final String key;
 
@@ -25,11 +25,11 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
   }
 
   BaseImageProvider({
-    required this.read,
+    required this.ref,
     required this.providerArguments,
   })  : key = providerArguments.image.key,
         super(_ImageProviderState.init()) {
-    final usedImageInfo = read(_usedImageProvider).getImageInfo(key);
+    final usedImageInfo = ref.read(_usedImageProvider).getImageInfo(key);
 
     if (usedImageInfo != null) {
       imageInfo = usedImageInfo;

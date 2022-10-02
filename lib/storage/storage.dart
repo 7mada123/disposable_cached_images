@@ -1,15 +1,18 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import './interface.dart';
 import '../image_info_data.dart';
 import '../images_isolate.dart';
 
-ImageCacheManger getInstance() => const _ImageDataBase();
+ImageStorageManger getInstance() => const _ImageDataBase();
 
-class _ImageDataBase extends ImageCacheManger {
+class _ImageDataBase extends ImageStorageManger {
   static const keysFile = "cache_keys.json";
 
   static late final Map<String, Map<String, dynamic>> fileContent;
@@ -74,6 +77,20 @@ class _ImageDataBase extends ImageCacheManger {
   Future<Uint8List> getLocalBytes(final String imagePath) async {
     try {
       return File(imagePath).readAsBytes();
+    } catch (e) {
+      throw Exception(
+        """Exception has occurred. Unable to load image file
+        path : $imagePath
+        Error : ${e.toString()}""",
+      );
+    }
+  }
+
+  @override
+  Future<Uint8List> getAssetBytes(String imagePath) async {
+    try {
+      final byteData = await rootBundle.load(imagePath);
+      return byteData.buffer.asUint8List();
     } catch (e) {
       throw Exception(
         """Exception has occurred. Unable to load image file

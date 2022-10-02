@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,9 +12,9 @@ import 'package:idb_shim/idb_browser.dart';
 import './interface.dart';
 import '../image_info_data.dart';
 
-ImageCacheManger getInstance() => const _WebImageDataBase();
+ImageStorageManger getInstance() => const _WebImageDataBase();
 
-class _WebImageDataBase extends ImageCacheManger {
+class _WebImageDataBase extends ImageStorageManger {
   static late final Database _db;
 
   static late final Map<String, Map<String, dynamic>> fileContent;
@@ -111,8 +112,25 @@ class _WebImageDataBase extends ImageCacheManger {
 
   @override
   Future<Uint8List> getLocalBytes(final String imagePath) async {
-    final byteData = await rootBundle.load(imagePath);
-    return byteData.buffer.asUint8List();
+    return _loaclimageFileBytes(imagePath);
+  }
+
+  @override
+  Future<Uint8List> getAssetBytes(String imagePath) async {
+    return _loaclimageFileBytes(imagePath);
+  }
+
+  static Future<Uint8List> _loaclimageFileBytes(final String imagePath) async {
+    try {
+      final byteData = await rootBundle.load(imagePath);
+      return byteData.buffer.asUint8List();
+    } catch (e) {
+      throw Exception(
+        """Exception has occurred. Unable to load image file
+        path : $imagePath
+        Error : ${e.toString()}""",
+      );
+    }
   }
 
   @override

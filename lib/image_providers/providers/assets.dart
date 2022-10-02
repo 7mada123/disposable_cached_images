@@ -1,20 +1,20 @@
 part of disposable_cached_images;
 
-final _localImageProvider = StateNotifierProvider.autoDispose
+final _assetsImageProvider = StateNotifierProvider.autoDispose
     .family<BaseImageProvider, _ImageProviderState, _ImageProviderArguments>((
   final ref,
   final providerArguments,
 ) {
   if (providerArguments.keepAlive) ref.keepAlive();
 
-  return _LocalImageProvider(
+  return _AssetsImageProvider(
     ref: ref,
     providerArguments: providerArguments,
   );
 });
 
-class _LocalImageProvider extends BaseImageProvider {
-  _LocalImageProvider({
+class _AssetsImageProvider extends BaseImageProvider {
+  _AssetsImageProvider({
     required super.ref,
     required super.providerArguments,
   });
@@ -25,7 +25,7 @@ class _LocalImageProvider extends BaseImageProvider {
       state = state.copyWith(isLoading: true);
       imageInfo = ImageInfoData.init(key);
 
-      final bytes = await _imageStorage.getLocalBytes(
+      final bytes = await _imageStorage.getAssetBytes(
         providerArguments.image,
       );
 

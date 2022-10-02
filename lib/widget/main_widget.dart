@@ -60,8 +60,8 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
         ),
         super(key: key);
 
-  /// Create a widget that displays a local image either from a file
-  /// or from an asset by providing the image path.
+  /// Create a widget that displays a local image from device storage
+  /// by providing the image path.
   ///
   /// Either the [width] and [height] arguments should be specified, or the
   /// widget should be placed in a context that sets tight layout constraints.
@@ -103,7 +103,62 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
         ),
         maxCacheWidth = null,
         maxCacheHeight = null,
+        // TODO
         _provider = _localImageProvider(
+          _ImageProviderArguments(
+            image: imagePath,
+            keepAlive: keepAlive,
+            resizeImage: resizeImage,
+            widgetHeight: height?.toInt(),
+            widgetWidth: width?.toInt(),
+          ),
+        ),
+        super(key: key);
+
+  /// Create a widget that displays a local image from
+  /// asset by providing the image path.
+  ///
+  /// Either the [width] and [height] arguments should be specified, or the
+  /// widget should be placed in a context that sets tight layout constraints.
+  /// Otherwise, the image dimensions will change as the image is loaded, which
+  /// will result in ugly layout changes.
+  DisposableCachedImage.asset({
+    required final String imagePath,
+    this.keepAlive = false,
+    this.fit,
+    this.centerSlice,
+    this.fadeDuration = const Duration(milliseconds: 300),
+    this.onLoading,
+    this.onError,
+    this.scale = 1.0,
+    this.height,
+    this.colorBlendMode,
+    this.color,
+    this.resizeImage = false,
+    this.shape = BoxShape.rectangle,
+    this.alignment = Alignment.center,
+    this.addRepaintBoundaries = true,
+    this.filterQuality = FilterQuality.none,
+    this.width,
+    this.onImage,
+    this.repeat = ImageRepeat.noRepeat,
+    this.isAntiAlias = false,
+    this.invertColors = false,
+    this.isDynamicHeight = false,
+    this.matchTextDirection = false,
+    this.borderRadius,
+    final Key? key,
+  })  : assert(
+          !isDynamicHeight || width != null,
+          'Image width must be specified for dynamic height images',
+        ),
+        assert(
+          !resizeImage || width != null || height != null,
+          'Either height or width must be specified when resizeImage is enabled',
+        ),
+        maxCacheWidth = null,
+        maxCacheHeight = null,
+        _provider = _assetsImageProvider(
           _ImageProviderArguments(
             image: imagePath,
             keepAlive: keepAlive,
@@ -288,7 +343,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
 
   /// Remove all cached images form device storage.
   static Future<void> clearCache() {
-    return ImageCacheManger.getPlatformInstance().clearCache();
+    return ImageStorageManger.getPlatformInstance().clearCache();
   }
 
   @override
