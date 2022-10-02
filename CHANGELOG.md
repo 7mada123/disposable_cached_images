@@ -1,3 +1,15 @@
+## 1.1.0
+
+Web images caching with indexedDB
+
+Added `asset` named constructor to fix assets images issue when using `local`
+
+Deprecated `runAppWithDisposableCachedImage` in favor of a standard way to initialize the package
+
+Fix `'Uint8List' not found` error in flutter version 3.3.1 and earlier
+
+Updates external dependencies
+
 ## 1.0.9
 
 Handle image decoding error
