@@ -8,8 +8,6 @@ Deprecated `runAppWithDisposableCachedImage` in favor of a standard way to initi
 
 Fix `'Uint8List' not found` error in flutter version 3.3.1 and earlier
 
-Updates external dependencies
-
 ## 1.0.9
 
 Handle image decoding error

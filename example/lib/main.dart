@@ -1,6 +1,5 @@
 import 'package:disposable_cached_images/disposable_cached_images.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import './image_widgets.dart';
 

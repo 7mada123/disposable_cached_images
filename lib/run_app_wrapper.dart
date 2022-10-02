@@ -52,7 +52,7 @@ Future<void> runAppWithDisposableCachedImage(
 ///Future<void> main() async {
 ///  WidgetsFlutterBinding.ensureInitialized();
 ///
-///  await DisposableImages.init(enableWebCache: false);
+///  await DisposableImages.init();
 ///
 ///  runApp(DisposableImages(MyApp()));
 ///}

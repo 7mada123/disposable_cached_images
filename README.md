@@ -26,8 +26,6 @@ void main() {
 }
 ```
 
-> If you are already using [flutter_riverpod](https://pub.dev/packages/flutter_riverpod), you can pass `ProviderScope` arguments `observers` and `overrides` to the `DisposableImages` widget.
-
 Now your app is ready to use the package.
 
 ### Displaying images
