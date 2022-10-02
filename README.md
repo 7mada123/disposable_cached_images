@@ -16,15 +16,17 @@ High performance due to the use of [dart:isolate](https://api.dart.dev/stable/2.
 
 ### Setting up
 
-All you have to do is to warp the root widget with `runAppWithDisposableCachedImage` instead of `runApp`.
+All you have to do is Initializing the cache and wrap the root widget with `DisposableImages`.
 
 ```dart
 void main() {
-  runAppWithDisposableCachedImage(const MyApp());
+  await DisposableImages.init();
+
+  runApp(const DisposableImages(MyApp()));
 }
 ```
 
-> If you are already using [flutter_riverpod](https://pub.dev/packages/flutter_riverpod), you can pass `ProviderScope` arguments `observers` and `overrides` to the `runAppWithDisposableCachedImage` function.
+> If you are already using [flutter_riverpod](https://pub.dev/packages/flutter_riverpod), you can pass `ProviderScope` arguments `observers` and `overrides` to the `DisposableImages` widget.
 
 Now your app is ready to use the package.
 
@@ -38,7 +40,13 @@ Use `DisposableCachedImage` named constructors to display images.
 DisposableCachedImage.network(imageUrl: 'https://picsum.photos/id/23/200/300');
 ```
 
-##### Obtaining a local image from assets or device storage using path
+##### Obtaining a local image from assets using path
+
+```dart
+DisposableCachedImage.asset(imagePath: 'assets/images/a_dot_burr.jpeg');
+```
+
+##### Obtaining a local image from device storage using path
 
 ```dart
 DisposableCachedImage.local(imagePath: 'assets/images/a_dot_burr.jpeg');
@@ -143,26 +151,25 @@ DisposableCachedImage.clearCache();
 
 ### Web
 
-If you want to enable web caching, you must declare it in `runAppWithDisposableCachedImage` as shown below.
+If you want to disable web caching, you can disable it in `runAppWithDisposableCachedImage` as shown below.
 
 ```dart
-runAppWithDisposableCachedImage(
-  const MyApp(),
-  // enable Web cache, default false
-  enableWebCache: true,
+runApp(
+  // disable Web cache, default true
+  await DisposableImages.init(enableWebCache: false);
+
+  runApp(const DisposableImages(MyApp()));
 );
 ```
 
-> In both cases the images will be saved in memory as variables, and the web local storage cache should not be enabled if your application uses many images because of the local storage size limit, prefer to use Cache-Control HTTP header.
-
 ### Note :
-the package is only usable for CanvasKit renderer for now, if you try to use it with HTML renderer, some images won't load after disposing of them as mentioned in [#2](https://github.com/7mada123/disposable_cached_images/issues/2)re]()
+the package is only usable for CanvasKit renderer for now, if you try to use it with HTML renderer, some images won't load after disposing as mentioned in [#2](https://github.com/7mada123/disposable_cached_images/issues/2)
 
 ## How it works
 
 The package uses [RawImage](https://api.flutter.dev/flutter/widgets/RawImage-class.html) with [dart-ui-Image](https://api.flutter.dev/flutter/dart-ui/Image-class.html) directly without the need for [ImageProvider](https://api.flutter.dev/flutter/painting/ImageProvider-class.html)
 
-Stores and retrieves files using [localStorage](https://api.flutter.dev/flutter/dart-html/Window/localStorage.html) on web and [dart:io](https://api.flutter.dev/flutter/dart-io/dart-io-library.html) on other platforms.
+Stores and retrieves files using indexedDB with [idb_shim Package](https://pub.dev/packages/idb_shim) on web and [dart:io](https://api.flutter.dev/flutter/dart-io/dart-io-library.html) on other platforms.
 
 Disposing and changing image state using [flutter_riverpod](https://pub.dev/packages/flutter_riverpod) with [state_notifier](https://pub.dev/packages/state_notifier).
 
@@ -172,9 +179,15 @@ Using [http](https://pub.dev/packages/http) to download images from the internet
 
 The [example](https://github.com/7mada123/disposable_cached_images/tree/main/example) directory has a sample application that uses this plugin.
 
+[Live web demo](https://mohammedalfateh2.github.io/disposable_cached_images.demo/).
+
 ### Roadmap
 
-Improve performance for web
+Improving performance for web using web worker
+
+Fixing web html render issue
+
+Handling images with [ImageProvider](https://api.flutter.dev/flutter/painting/ImageProvider-class.html)
 
 Improve package documentation
 
