@@ -1,12 +1,13 @@
 import 'package:disposable_cached_images/disposable_cached_images.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import './image_widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await DisposableImages.init(enableWebCache: false);
+  await DisposableImages.init();
 
   runApp(const DisposableImages(MyApp()));
 }

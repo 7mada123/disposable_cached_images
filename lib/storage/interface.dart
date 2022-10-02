@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 import '../image_info_data.dart';
 import 'image_storage_stub.dart'
-    if (dart.library.io) './cache.dart'
-    if (dart.library.html) './web_cache.dart';
+    if (dart.library.io) './storage.dart'
+    if (dart.library.html) './web_storage.dart';
 
 /// The image cache interface
 abstract class ImageStorageManger {

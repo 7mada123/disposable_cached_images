@@ -12,12 +12,15 @@ final _imageStorage = ImageStorageManger.getPlatformInstance();
 
 @Deprecated('use [DisposableImages]')
 
+/// instead of using `runAppWithDisposableCachedImage` use `DisposableImages` as shown below
 /// ```dart
 /// Future<void> main() async {
 ///   WidgetsFlutterBinding.ensureInitialized();
 ///
-///   await DisposableImages.init(enableWebCache: false);
+///   // initialize the package
+///   await DisposableImages.init();
 ///
+///   // warp the root widget with `DisposableImages`
 ///   runApp(const DisposableImages(MyApp()));
 /// }
 /// ```
@@ -43,16 +46,19 @@ Future<void> runAppWithDisposableCachedImage(
 // running on web html renderer
 // html.document.body?.getAttribute("flt-renderer")?.contains("html")
 
+/// `DisposableImages` used to initialize the pacakge
+///
+/// ```dart
+///Future<void> main() async {
+///  WidgetsFlutterBinding.ensureInitialized();
+///
+///  await DisposableImages.init(enableWebCache: false);
+///
+///  runApp(DisposableImages(MyApp()));
+///}
+///```
 class DisposableImages extends StatelessWidget {
-  const DisposableImages(
-    this.child, {
-    super.key,
-    this.overrides = const [],
-    this.observers,
-  });
-
-  final List<Override> overrides;
-  final List<ProviderObserver>? observers;
+  const DisposableImages(this.child, {super.key});
 
   final Widget child;
 
@@ -62,12 +68,6 @@ class DisposableImages extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ProviderScope(
-      overrides: [
-        ...overrides,
-      ],
-      observers: observers,
-      child: child,
-    );
+    return ProviderScope(child: child);
   }
 }
