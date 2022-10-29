@@ -149,10 +149,10 @@ DisposableCachedImage.clearCache();
 
 ### Web
 
-If you want to disable web caching, you can disable it in `runAppWithDisposableCachedImage` as shown below.
+If you want to disable web caching, you can disable it when initialization as shown below.
 
 ```dart
-runApp(
+void main(
   // disable Web cache, default true
   await DisposableImages.init(enableWebCache: false);
 
