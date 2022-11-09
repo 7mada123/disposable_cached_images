@@ -1,5 +1,11 @@
 ## 1.1.0
 
+update dependences
+
+Fix the issue when the image is flashing on navigation if `keepAlive` is enabled
+
+## 1.1.0
+
 Web images caching with indexedDB
 
 Added `asset` named constructor to fix assets images issue when using `local`
