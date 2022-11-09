@@ -5,9 +5,7 @@ final _localImageProvider = StateNotifierProvider.autoDispose
   final ref,
   final providerArguments,
 ) {
-  // if (providerArguments.keepAlive) ref.keepAlive();
-
-  ref.maintainState = providerArguments.keepAlive;
+  if (providerArguments.keepAlive) ref.keepAlive();
 
   return _LocalImageProvider(
     ref: ref,
