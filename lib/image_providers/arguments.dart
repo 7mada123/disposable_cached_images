@@ -22,12 +22,9 @@ class _ImageProviderArguments {
   bool operator ==(final Object other) {
     if (identical(this, other)) return true;
 
-    return other is _ImageProviderArguments &&
-        other.image == image &&
-        other.keepAlive == keepAlive &&
-        other.headers == headers;
+    return other is _ImageProviderArguments && other.hashCode == hashCode;
   }
 
   @override
-  int get hashCode => image.hashCode ^ keepAlive.hashCode ^ headers.hashCode;
+  int get hashCode => image.hashCode;
 }
