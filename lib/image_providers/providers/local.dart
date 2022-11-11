@@ -1,3 +1,5 @@
+// ignore_for_file: curly_braces_in_flow_control_structures
+
 part of disposable_cached_images;
 
 final _localImageProvider = StateNotifierProvider.autoDispose
@@ -41,7 +43,8 @@ class _LocalImageProvider extends BaseImageProvider {
         },
       );
 
-      ref.read(_usedImageProvider).add(imageInfo);
+      if (providerArguments.keepBytesInMemory)
+        ref.read(_usedImageProvider).add(imageInfo);
     } catch (e, s) {
       onImageError(e, s);
     }

@@ -91,6 +91,10 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.invertColors = false,
     this.isDynamicHeight = false,
     this.matchTextDirection = false,
+
+    /// option to save this image bytes into memory and reuse it later instead of reading from storage
+    /// it should be disable if you are writing/saving images to the same path
+    final bool keepBytesInMemory = true,
     this.borderRadius,
     final Key? key,
   })  : assert(
@@ -109,6 +113,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
             image: imagePath,
             keepAlive: keepAlive,
             resizeImage: resizeImage,
+            keepBytesInMemory: keepBytesInMemory,
             widgetHeight: height?.toInt(),
             widgetWidth: width?.toInt(),
           ),
