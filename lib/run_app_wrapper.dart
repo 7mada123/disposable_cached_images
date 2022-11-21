@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 part of disposable_cached_images;
 
 /// {@template runAppWithDisposableCachedImage}
@@ -60,9 +62,17 @@ Future<void> runAppWithDisposableCachedImage(
 class DisposableImages extends StatelessWidget {
   const DisposableImages(this.child, {super.key});
 
+  static late final _DecodedImages decodedImages;
+
   final Widget child;
 
-  static Future<void> init({final bool enableWebCache = true}) {
+  static Future<void> init({
+    final bool enableWebCache = true,
+    // TODO doc
+    final int? decodedImagesCount,
+  }) {
+    decodedImages = _DecodedImages(decodedImagesCount);
+
     return _imageStorage.init(enableWebCache);
   }
 

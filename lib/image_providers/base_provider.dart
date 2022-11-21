@@ -91,17 +91,21 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
 
   Future<void> handelImageProvider({
     final void Function(ui.Image)? onImage,
+    final _ImageResolverResult? imageResolverResult,
   }) async {
-    _ImageDecoder.schedule(
-      bytes: imageInfo.imageBytes!,
-      completer: completer,
-    );
+    late final _ImageResolverResult? result;
+    if (imageResolverResult == null) {
+      _ImageDecoder.schedule(
+        bytes: imageInfo.imageBytes!,
+        completer: completer,
+      );
 
-    final result = await completer.future;
-
-    if (result == null) {
-      return;
+      result = await completer.future;
+    } else {
+      result = imageResolverResult;
     }
+
+    if (result == null) return;
 
     if (onImage != null) onImage(result.image);
 
@@ -111,7 +115,7 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
       return _handelAnimatedImage(result.codec!, image: result.image);
     }
 
-    state.uiImages.putIfAbsent('', () => result.image);
+    state.uiImages.putIfAbsent('', () => result!.image);
 
     if (providerArguments.resizeImage) {
       return addResizedImage(

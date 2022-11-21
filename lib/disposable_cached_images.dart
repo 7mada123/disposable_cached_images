@@ -9,12 +9,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import './storage/interface.dart';
 import './image_info_data.dart';
+import './storage/interface.dart';
+
 import './image_providers/network_download_mixin/network_download_mixin_stub.dart'
     if (dart.library.io) './image_providers/network_download_mixin/network_download_mixin.dart'
     if (dart.library.html) './image_providers/network_download_mixin/network_download_mixin_web.dart';
 
+part './decoded_images_provider.dart';
 part './image_decoder.dart';
 part './image_providers/arguments.dart';
 part './image_providers/base_provider.dart';
