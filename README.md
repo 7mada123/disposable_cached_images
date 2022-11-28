@@ -141,7 +141,38 @@ DisposableCachedImage.network(
 
 ---
 
-#### Remove all cached images from the device storage
+### Decode images before displaying
+
+You can use `DisposableImages.decodedImages` to decode images before displaying them in case you need to show images immediately without loading
+
+```dart
+  // decode network images
+  DisposableImages.decodedImages.addNetwork(url);
+
+  // decode loacl images
+  DisposableImages.decodedImages.addLocal(path);
+
+  // decode assets images
+  DisposableImages.decodedImages.addAssets(path);
+```
+
+If you decode the images in this way, you will have to get dispose the images manually or set the maximum number of decoded images
+
+```dart
+// set the maximum number of decoded images, old images will be removed if this number is exeeded
+// this is optional and can be null
+DisposableImages.init(maximumDecodedImagesCount: 100);
+
+
+// dispose an image by key
+// the key is path if the image is local or assets, if it's a network image the key is the url
+DisposableImages.decodedImages.dispose(key);
+
+// dispose all images
+DisposableImages.decodedImages.disposeAll();
+```
+
+### Remove all cached images from the device storage
 
 ```dart
 DisposableCachedImage.clearCache();

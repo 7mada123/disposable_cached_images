@@ -1,3 +1,11 @@
+## 1.1.2
+
+added `DisposableImages.decodedImages` to decode images before displaying
+
+added `keepBytesInMemory` to choose whether to save images bytes in memory or not
+
+update dependences
+
 ## 1.1.1
 
 update dependences

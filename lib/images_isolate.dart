@@ -64,7 +64,7 @@ class ImagesIsolate {
     if (result is! String) throw result;
   }
 
-  static Future<Uint8List> getImageFromUrl(
+  static Future<Uint8List> getNetworkBytes(
     final String url,
     final Map<String, String>? headers,
   ) async {
@@ -105,7 +105,7 @@ void _imagesIsolate(final List<dynamic> arg) {
 
   IOSink keysIoSink = cacheKeysFile.openWrite(mode: FileMode.writeOnlyAppend);
 
-  port.listen((final message) async {
+  void messageHandeler(final message) async {
     final _IsolateOprations opration = message[0];
 
     switch (opration) {
@@ -200,5 +200,7 @@ void _imagesIsolate(final List<dynamic> arg) {
         break;
       default:
     }
-  });
+  }
+
+  port.listen(messageHandeler);
 }

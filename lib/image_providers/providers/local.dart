@@ -24,17 +24,6 @@ class _LocalImageProvider extends BaseImageProvider {
   @override
   Future<void> getImage() async {
     try {
-      final DecodedImage? decodedImage =
-          DisposableImages.decodedImages._get(providerArguments.image);
-
-      if (decodedImage != null) {
-        imageInfo = decodedImage.imageInfoData;
-
-        return handelImageProvider(
-          imageResolverResult: decodedImage.imageResolverResult,
-        );
-      }
-
       state = state.copyWith(isLoading: true);
       imageInfo = ImageInfoData.init(key);
 

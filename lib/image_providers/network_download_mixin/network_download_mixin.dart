@@ -11,7 +11,7 @@ mixin NetworkImageProviderPlatformMixin on BaseImageProvider {
   }
 
   Future<Uint8List> getImageByetsFromUrl() async {
-    return ImagesIsolate.getImageFromUrl(
+    return ImagesIsolate.getNetworkBytes(
       providerArguments.image,
       providerArguments.headers,
     );

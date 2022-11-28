@@ -12,38 +12,6 @@ part of disposable_cached_images;
 /// `enableWebCache` Enable or disable web caching
 final _imageStorage = ImageStorageManger.getPlatformInstance();
 
-@Deprecated('use [DisposableImages]')
-
-/// instead of using `runAppWithDisposableCachedImage` use `DisposableImages` as shown below
-/// ```dart
-/// Future<void> main() async {
-///   WidgetsFlutterBinding.ensureInitialized();
-///
-///   // initialize the package
-///   await DisposableImages.init();
-///
-///   // warp the root widget with `DisposableImages`
-///   runApp(const DisposableImages(MyApp()));
-/// }
-/// ```
-Future<void> runAppWithDisposableCachedImage(
-  final Widget app, {
-  final List<Override> overrides = const [],
-  final List<ProviderObserver>? observers,
-  final bool enableWebCache = true,
-}) async {
-  await _imageStorage.init(enableWebCache);
-
-  runApp(
-    ProviderScope(
-      overrides: [
-        ...overrides,
-      ],
-      observers: observers,
-      child: app,
-    ),
-  );
-}
 // TODO
 // running on web html renderer
 // html.document.body?.getAttribute("flt-renderer")?.contains("html")
@@ -62,16 +30,20 @@ Future<void> runAppWithDisposableCachedImage(
 class DisposableImages extends StatelessWidget {
   const DisposableImages(this.child, {super.key});
 
+  /// decode images before showing them in the UI
+  ///
+  /// using this api you have to handle images disposing manually or provide `decodedImagesCount` so you don't end up with memory issue
   static late final _DecodedImages decodedImages;
 
   final Widget child;
 
   static Future<void> init({
     final bool enableWebCache = true,
-    // TODO doc
-    final int? decodedImagesCount,
+
+    /// specify the maximum number of decoded images
+    final int? maximumDecodedImagesCount,
   }) {
-    decodedImages = _DecodedImages(decodedImagesCount);
+    decodedImages = _DecodedImages(maximumDecodedImagesCount);
 
     return _imageStorage.init(enableWebCache);
   }

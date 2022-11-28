@@ -38,6 +38,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.onError,
     this.fadeDuration = const Duration(milliseconds: 300),
     final Key? key,
+    this.keepBytesInMemory = true,
   })  : assert(
           !isDynamicHeight || width != null,
           'Image width must be specified for dynamic size',
@@ -54,6 +55,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
             keepAlive: keepAlive,
             headers: headers,
             resizeImage: resizeImage,
+            keepBytesInMemory: keepBytesInMemory,
             widgetHeight: height?.toInt(),
             widgetWidth: width?.toInt(),
           ),
@@ -91,10 +93,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.invertColors = false,
     this.isDynamicHeight = false,
     this.matchTextDirection = false,
-
-    /// option to save this image bytes into memory and reuse it later instead of reading from storage
-    /// it should be disable if you are writing/saving images to the same path
-    final bool keepBytesInMemory = true,
+    this.keepBytesInMemory = true,
     this.borderRadius,
     final Key? key,
   })  : assert(
@@ -107,7 +106,6 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
         ),
         maxCacheWidth = null,
         maxCacheHeight = null,
-        // TODO
         _provider = _localImageProvider(
           _ImageProviderArguments(
             image: imagePath,
@@ -153,6 +151,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.matchTextDirection = false,
     this.borderRadius,
     final Key? key,
+    this.keepBytesInMemory = true,
   })  : assert(
           !isDynamicHeight || width != null,
           'Image width must be specified for dynamic height images',
@@ -166,6 +165,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
         _provider = _assetsImageProvider(
           _ImageProviderArguments(
             image: imagePath,
+            keepBytesInMemory: keepBytesInMemory,
             keepAlive: keepAlive,
             resizeImage: resizeImage,
             widgetHeight: height?.toInt(),
@@ -173,6 +173,9 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
           ),
         ),
         super(key: key);
+
+  /// option to save this image bytes into memory and reuse it later instead of reading from storage
+  final bool keepBytesInMemory;
 
   /// Resize the image and save the resized bytes to storage, see [resizeImage].
   ///
