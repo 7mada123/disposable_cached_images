@@ -156,7 +156,7 @@ You can use `DisposableImages.decodedImages` to decode images before displaying 
   DisposableImages.decodedImages.addAssets(path);
 ```
 
-If you decode the images in this way, you will have to get dispose the images manually or set the maximum number of decoded images
+If you decode the images in this way, you will have to dispose the images manually or set the maximum number of decoded images
 
 ```dart
 // set the maximum number of decoded images, old images will be removed if this number is exeeded

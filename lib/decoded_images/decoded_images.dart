@@ -5,6 +5,8 @@ part of disposable_cached_images;
 class _DecodedImages {
   final int? _capacity;
 
+  final Set<String> _decoding = HashSet();
+
   _DecodedImages(this._capacity);
 
   final LinkedHashMap<String, _DecodedImage> _decodedImages = LinkedHashMap();
@@ -15,7 +17,7 @@ class _DecodedImages {
   Future<void> addLocal(String path) async {
     final String key = path.key;
 
-    if (_decodedImages.containsKey(key)) return;
+    if (contain(key)) return;
 
     final bytes = await _imageStorage.getLocalBytes(path);
 
@@ -31,7 +33,7 @@ class _DecodedImages {
   Future<void> addAssets(String path) async {
     final String key = path.key;
 
-    if (_decodedImages.containsKey(key)) return;
+    if (contain(key)) return;
 
     final bytes = await _imageStorage.getAssetBytes(path);
 
@@ -47,7 +49,7 @@ class _DecodedImages {
   Future<void> addNetwork(String url, {Map<String, String>? headers}) async {
     final String key = url.key;
 
-    if (_decodedImages.containsKey(key)) return;
+    if (contain(key)) return;
 
     bool isSaved = true;
 
@@ -74,6 +76,8 @@ class _DecodedImages {
 
     selected?.imageResolverResult.image.dispose();
     selected?.imageResolverResult.codec?.dispose();
+
+    _decoding.remove(key);
   }
 
   /// dispose all images
@@ -83,7 +87,17 @@ class _DecodedImages {
       _decodedImages[key]!.imageResolverResult.codec?.dispose();
     }
 
+    _decoding.clear();
+
     _decodedImages.clear();
+  }
+
+  bool contain(final String key) {
+    if (_decodedImages.containsKey(key) || _decoding.contains(key)) return true;
+
+    _decoding.add(key);
+
+    return false;
   }
 
   Future<void> _addImage(final Uint8List bytes, final String key) async {
@@ -95,6 +109,13 @@ class _DecodedImages {
     );
 
     final res = await completer.future;
+
+    if (!_decoding.contains(key)) {
+      res!.codec?.dispose();
+      res.image.dispose();
+
+      return;
+    }
 
     _decodedImages[key] = _DecodedImage(
       ImageInfoData(
@@ -114,6 +135,8 @@ class _DecodedImages {
 
       oldest?.imageResolverResult.image.dispose();
     }
+
+    _decoding.remove(key);
   }
 
   _DecodedImage? _get(String image) {
