@@ -3,16 +3,24 @@ part of disposable_cached_images;
 class _ImageDecoder {
   static const _maxDuration = Duration(milliseconds: 500);
 
-  static bool _scheduled = false;
+  static late final int maximumDownload;
+
+  static int currentCount = 0;
 
   static final _queue = Queue<Future<void> Function()>();
 
-  static Future<void> _decodeFirstImage() async {
-    while (_queue.isNotEmpty) {
-      await _queue.removeFirst()().timeout(_maxDuration, onTimeout: () {});
-    }
+  static Future<void> _runImagesdecoder() async {
+    while (_queue.isNotEmpty && currentCount < maximumDownload) {
+      currentCount++;
+      _queue
+          .removeFirst()()
+          .timeout(_maxDuration, onTimeout: () {})
+          .then((value) {
+        currentCount--;
 
-    _scheduled = false;
+        _runImagesdecoder();
+      });
+    }
   }
 
   static void schedule({
@@ -23,11 +31,7 @@ class _ImageDecoder {
   }) async {
     _queue.add(() => _getImage(bytes, height, width, completer));
 
-    if (_scheduled) return;
-
-    _scheduled = true;
-
-    await _decodeFirstImage();
+    _runImagesdecoder();
   }
 
   static void scheduleWithResizedBytes({
@@ -38,11 +42,7 @@ class _ImageDecoder {
   }) async {
     _queue.add(() => _getResizedBytesImage(bytes, height, width, completer));
 
-    if (_scheduled) return;
-
-    _scheduled = true;
-
-    await _decodeFirstImage();
+    _runImagesdecoder();
   }
 
   static Future<void> _getImage(

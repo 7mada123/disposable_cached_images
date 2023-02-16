@@ -27,7 +27,7 @@ class _LocalImageProvider extends BaseImageProvider {
       state = state.copyWith(isLoading: true);
       imageInfo = ImageInfoData.init(key);
 
-      final bytes = await _imageStorage.getLocalBytes(
+      final bytes = await _imagesHelper.getLocalBytes(
         providerArguments.image,
       );
 

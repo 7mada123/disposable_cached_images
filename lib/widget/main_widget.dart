@@ -39,6 +39,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
     this.fadeDuration = const Duration(milliseconds: 300),
     final Key? key,
     this.keepBytesInMemory = true,
+    this.progressBuilder,
   })  : assert(
           !isDynamicHeight || width != null,
           'Image width must be specified for dynamic size',
@@ -116,6 +117,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
             widgetWidth: width?.toInt(),
           ),
         ),
+        progressBuilder = null,
         super(key: key);
 
   /// Create a widget that displays a local image from
@@ -172,6 +174,7 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
             widgetWidth: width?.toInt(),
           ),
         ),
+        progressBuilder = null,
         super(key: key);
 
   /// option to save this image bytes into memory and reuse it later instead of reading from storage
@@ -349,10 +352,10 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
 
   final DisposableImageProvider _provider;
 
+  final Widget Function(BuildContext context, double progress)? progressBuilder;
+
   /// Remove all cached images form device storage.
-  static Future<void> clearCache() {
-    return ImageStorageManger.getPlatformInstance().clearCache();
-  }
+  static Future<void> clearCache() => _imagesHelper.clearCache();
 
   @override
   ConsumerState<DisposableCachedImage> createState() =>
@@ -401,7 +404,12 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
     if (providerState.isLoading) {
       Widget loading = const SizedBox();
 
-      if (widget.onLoading != null) {
+      if (providerState.isDownloading && widget.progressBuilder != null) {
+        loading = _DownloadProgressWidget(
+          progressBuilder: widget.progressBuilder!,
+          url: ref.read(widget._provider.notifier).providerArguments.image,
+        );
+      } else if (widget.onLoading != null) {
         loading = widget.onLoading!(
           context,
           providerState.height,

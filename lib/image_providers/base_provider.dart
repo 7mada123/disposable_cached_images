@@ -15,6 +15,8 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
 
   @override
   void dispose() {
+    _imagesHelper.threadOperation.cancleDownload(providerArguments.image);
+
     for (final image in state.uiImages.values) {
       image.dispose();
     }
@@ -29,8 +31,9 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
     required this.providerArguments,
   })  : key = providerArguments.image.key,
         super(_ImageProviderState.init()) {
-    final _DecodedImage? decodedImage =
-        DisposableImages.decodedImages._get(providerArguments.image);
+    final _DecodedImage? decodedImage = DisposableImages.decodedImages._get(
+      providerArguments.image,
+    );
 
     if (decodedImage != null) {
       imageInfo = decodedImage.imageInfoData;
@@ -120,7 +123,14 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
 
     if (result == null) return;
 
-    if (onImage != null) onImage(result.image);
+    if (onImage != null) {
+      onImage(result.image);
+    } else {
+      imageInfo = imageInfo.copyWith(
+        width: result.image.width,
+        height: result.image.height,
+      );
+    }
 
     // don't resize animated images
     if (result.isAnimated) {

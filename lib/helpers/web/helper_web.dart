@@ -1,56 +1,42 @@
 // ignore_for_file: curly_braces_in_flow_control_structures
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:idb_shim/idb.dart';
-import 'package:idb_shim/idb_browser.dart';
 
-import './interface.dart';
-import '../image_info_data.dart';
+import '../interfaces.dart';
+import '../../image_info_data.dart';
+import './dart_js.dart';
 
-ImageStorageManger getInstance() => const _WebImageDataBase();
+HelperBase getInstance() => _HelperWeb();
 
-class _WebImageDataBase extends ImageStorageManger {
-  static late final Database _db;
-
+class _HelperWeb extends HelperBase {
   static late final Map<String, Map<String, dynamic>> fileContent;
 
-  static late final bool _disableWebCache;
+  static bool _disableWebCache = false;
 
-  static const String _storeName = "web_images";
-
-  const _WebImageDataBase();
+  // TODO web html render
+  // html.document.body?.getAttribute("flt-renderer")?.contains("html")
 
   @override
-  Future<void> init(final bool enableWebCache) async {
+  final _ThreadOperationWeb threadOperation = _ThreadOperationWeb();
+
+  _HelperWeb();
+
+  @override
+  Future<void> init(final bool enableWebCache, int maximumDownload) async {
+    await threadOperation.init();
+
     if (!enableWebCache) {
       _disableWebCache = true;
       fileContent = {};
       return;
     }
 
-    _db = await idbFactoryBrowser.open("app_db.db", version: 1,
-        onUpgradeNeeded: (VersionChangeEvent event) {
-      Database db = event.database;
-      db.createObjectStore(_storeName, autoIncrement: true);
-    });
-
-    _disableWebCache = false;
-
-    var txn = _db.transaction(_storeName, "readonly");
-    var store = txn.objectStore(_storeName);
-
-    final res = await store.getAllKeys();
-
-    await txn.completed;
-
-    if (res.isEmpty) {
-      fileContent = {};
-      return;
-    }
+    final res = await threadOperation.db.getKeys();
 
     final List<String> keys = [];
 
@@ -68,17 +54,21 @@ class _WebImageDataBase extends ImageStorageManger {
   }
 
   @override
-  void add(final ImageInfoData imageInfo) {
+  void add(final ImageInfoData imageInfo) async {
     if (_disableWebCache || fileContent.containsKey(imageInfo.key)) return;
 
     fileContent.putIfAbsent(imageInfo.key, () => imageInfo.sizeToMap());
 
     try {
-      _add(imageInfo);
+      await threadOperation.addToCache(
+        key: imageInfo.key,
+        width: imageInfo.width!,
+        height: imageInfo.height!,
+        bytes: imageInfo.imageBytes!,
+      );
     } catch (e, s) {
       debugPrint(
-          "disposable cached images : added web image to cache error\nerror :: ${e.toString()}");
-      debugPrint(s.toString());
+          "disposable cached images : added web image to cache error\nerror :: ${e.toString()} \n$s");
     }
   }
 
@@ -97,16 +87,7 @@ class _WebImageDataBase extends ImageStorageManger {
 
     if (imageInfo == null) return null;
 
-    var txn = _db.transaction(_storeName, "readonly");
-    var store = txn.objectStore(_storeName);
-
-    final res = await store.getObject(imageInfo.webKey()) as Uint8List?;
-
-    await txn.completed;
-
-    if (res == null) return null;
-
-    return res;
+    return threadOperation.getBytes(imageInfo.webKey());
   }
 
   @override
@@ -136,12 +117,7 @@ class _WebImageDataBase extends ImageStorageManger {
   Future<void> clearCache() async {
     fileContent.clear();
 
-    var txn = _db.transaction(_storeName, "readwrite");
-    var store = txn.objectStore(_storeName);
-
-    await store.clear();
-
-    await txn.completed;
+    return threadOperation.clearData();
   }
 
   /// Using RegEx for the key so that we don't accidentally use or remove
@@ -149,26 +125,50 @@ class _WebImageDataBase extends ImageStorageManger {
   static final _webKeyReg = RegExp(
     r'{"http(s{0,1}).*?(height":\d+,"width":\d+})}',
   );
-
-  static void _add(final ImageInfoData imageInfo) async {
-    try {
-      final key = imageInfo.webKey();
-
-      var txn = _db.transaction(_storeName, "readwrite");
-      var store = txn.objectStore(_storeName);
-
-      await store.put(
-        imageInfo.imageBytes!,
-        key,
-      );
-
-      await txn.completed;
-    } catch (e) {
-      rethrow;
-    }
-  }
 }
 
 extension on ImageInfoData {
   String webKey() => json.encode({key: sizeToMap()});
+}
+
+class _ThreadOperationWeb extends ThreadOperationBase {
+  final client = JSHttpClientHelper();
+  final db = JSIndexedDb();
+  final Queue<Future<void> Function(String url)> queue = Queue();
+
+  Future<void> init() => db.open();
+
+  @override
+  Future<void> clearData() => db.clearCache();
+
+  @override
+  Future<Uint8List?> getBytes(String key) async => db.getImage(key);
+
+  @override
+  Future<void> addToCache({
+    required String key,
+    required int width,
+    required int height,
+    required Uint8List bytes,
+  }) {
+    return db.addToCache(
+      json.encode({
+        key: {
+          'height': height,
+          'width': width,
+        }
+      }),
+      bytes,
+    );
+  }
+
+  @override
+  void cancleDownload(String url) {
+    client.cancelDownload(url);
+  }
+
+  @override
+  Stream getNetworkBytes(String url, Map<String, String>? headers) {
+    return client.download(url, headers: headers);
+  }
 }

@@ -1,3 +1,19 @@
+## 1.2.0
+
+improve web performance with Web-Worker
+
+added `progressBuilder` [#6](https://github.com/7mada123/disposable_cached_images/issues/6)
+
+added `maximumDownload` option to specify the maximum number of images to be downloaded simultaneously
+
+added `maximumDecode` option to specify the maximum number of images to be decoded simultaneously
+
+removed [idb_shim](https://pub.dev/packages/http) dependency, the package now use IndexedDB in Web-Worker
+
+removed [http](https://pub.dev/packages/idb_shim) dependency in favor of [dart:_http]() and [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+
+update dependences, doc and example
+
 ## 1.1.2
 
 added `DisposableImages.decodedImages` to decode images before displaying

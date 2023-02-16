@@ -10,11 +10,7 @@ part of disposable_cached_images;
 /// {@endtemplate}
 ///
 /// `enableWebCache` Enable or disable web caching
-final _imageStorage = ImageStorageManger.getPlatformInstance();
-
-// TODO
-// running on web html renderer
-// html.document.body?.getAttribute("flt-renderer")?.contains("html")
+final _imagesHelper = HelperBase.getPlatformInstance();
 
 /// `DisposableImages` used to initialize the pacakge
 ///
@@ -40,12 +36,24 @@ class DisposableImages extends StatelessWidget {
   static Future<void> init({
     final bool enableWebCache = true,
 
-    /// specify the maximum number of decoded images
+    /// specify the maximum number of images to be decoded simultaneously
+    ///
+    /// increasing this number may impact the performance, default to 1
+    final int maximumDecode = 1,
+
+    /// specify the maximum number of images to be downloaded simultaneously, this wouldn't have effect on web
+    ///
+    /// using big number may lead to exception depending on the platform
+    final int maximumDownload = 4,
+
+    /// specify the maximum number of decoded images that should be kept in memory when using [DisposableImages.decodedImages]
     final int? maximumDecodedImagesCount,
   }) {
     decodedImages = _DecodedImages(maximumDecodedImagesCount);
 
-    return _imageStorage.init(enableWebCache);
+    _ImageDecoder.maximumDownload = maximumDecode;
+
+    return _imagesHelper.init(enableWebCache, maximumDownload);
   }
 
   @override

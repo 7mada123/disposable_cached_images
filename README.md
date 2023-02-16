@@ -10,7 +10,7 @@ Cancel the download if the image widget has been disposed to reduce bandwidth us
 
 Remove the image from memory if the image widget has been disposed to reduce device memory usage.
 
-High performance due to the use of [dart:isolate](https://api.dart.dev/stable/2.16.2/dart-isolate/dart-isolate-library.html)
+High performance due to the use of [dart:isolate](https://api.dart.dev/stable/2.16.2/dart-isolate/dart-isolate-library.html) and Web-Workers on web
 
 ## Usage
 
@@ -26,7 +26,37 @@ void main() {
 }
 ```
 
+#### additional steps for web only
+
+Download [web_js](https://github.com/7mada123/disposable_cached_images/tree/main/example/web) from the example directory and copy it into your `web` folder,
+and then include it in `index.html`
+
+```
+<!doctype html>
+<html lang="en">
+<head>
+  <script src="flutter.js" defer></script>
+  <script src="web_js/worker_helper.js" defer></script>
+</head>
+<body></body>
+</html>
+```
+
 Now your app is ready to use the package.
+
+### initialization options
+
+#### enableWebCache
+enable / disable web image caching
+
+#### maximumDecodedImagesCount
+The maximum number of decoded images that should be kept in memory when using `DisposableImages.decodedImages`
+
+#### maximumDecode
+The maximum number of images to be decoded simultaneously
+
+#### maximumDownload
+The maximum number of images to be downloaded simultaneously
 
 ### Displaying images
 
@@ -66,13 +96,16 @@ DisposableCachedImage.network(
 
 ---
 
-You can display your custom widgets while the image is loading, has an error and when it is ready as shown below
+You can display your custom widgets while the image is loading, downloading, has an error and when it is ready as shown below
 
 ```dart
 DisposableCachedImage.network(
   imageUrl: 'https://picsum.photos/id/23/200/300',
   onLoading: (context) => const Center(
     child: Icon(Icons.downloading),
+  ),
+  progressBuilder: (context, progress) => Center(
+    child: LinearProgressIndicator(value: progress),
   ),
   onError: (context, error, stackTrace, retryCall) => Center(
     child: IconButton(
@@ -178,31 +211,18 @@ DisposableImages.decodedImages.disposeAll();
 DisposableCachedImage.clearCache();
 ```
 
-### Web
-
-If you want to disable web caching, you can disable it when initialization as shown below.
-
-```dart
-void main(
-  // disable Web cache, default true
-  await DisposableImages.init(enableWebCache: false);
-
-  runApp(const DisposableImages(MyApp()));
-);
-```
-
-### Note :
-the package is only usable for CanvasKit renderer for now, if you try to use it with HTML renderer, some images won't load after disposing as mentioned in [#2](https://github.com/7mada123/disposable_cached_images/issues/2)
+### Web Note :
+the package is only usable for CanvasKit renderer for now, if you try to use it with HTML renderer, images won't load as mentioned in [#2](https://github.com/7mada123/disposable_cached_images/issues/2)
 
 ## How it works
 
 The package uses [RawImage](https://api.flutter.dev/flutter/widgets/RawImage-class.html) with [dart-ui-Image](https://api.flutter.dev/flutter/dart-ui/Image-class.html) directly without the need for [ImageProvider](https://api.flutter.dev/flutter/painting/ImageProvider-class.html)
 
-Stores and retrieves files using indexedDB with [idb_shim Package](https://pub.dev/packages/idb_shim) on web and [dart:io](https://api.flutter.dev/flutter/dart-io/dart-io-library.html) on other platforms.
+Stores and retrieves files using indexedDB on web and [dart:io](https://api.flutter.dev/flutter/dart-io/dart-io-library.html) on other platforms.
 
 Disposing and changing image state using [flutter_riverpod](https://pub.dev/packages/flutter_riverpod) with [state_notifier](https://pub.dev/packages/state_notifier).
 
-Using [http](https://pub.dev/packages/http) to download images from the internet.
+Downloading images with [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) on web and [dart:_http]() on other platforms.
 
 ### Example app
 
@@ -212,11 +232,7 @@ The [example](https://github.com/7mada123/disposable_cached_images/tree/main/exa
 
 ### Roadmap
 
-Improving performance for web using web worker
-
 Fixing web html render issue
-
-Handling images with [ImageProvider](https://api.flutter.dev/flutter/painting/ImageProvider-class.html)
 
 Improve package documentation
 

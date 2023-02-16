@@ -19,7 +19,7 @@ class _DecodedImages {
 
     if (contain(key)) return;
 
-    final bytes = await _imageStorage.getLocalBytes(path);
+    final bytes = await _imagesHelper.getLocalBytes(path);
 
     return _addImage(
       bytes,
@@ -35,7 +35,7 @@ class _DecodedImages {
 
     if (contain(key)) return;
 
-    final bytes = await _imageStorage.getAssetBytes(path);
+    final bytes = await _imagesHelper.getAssetBytes(path);
 
     return _addImage(
       bytes,
@@ -53,10 +53,22 @@ class _DecodedImages {
 
     bool isSaved = true;
 
-    Uint8List? bytes = await _imageStorage.getBytes(key);
+    Uint8List? bytes = await _imagesHelper.getBytes(key);
 
     if (bytes == null) {
-      bytes = await getImageBytesFromUrl(url, headers: headers);
+      final Completer<Uint8List> responseCompleter = Completer();
+
+      _imagesHelper.threadOperation.getNetworkBytes(url, headers).listen(
+        (event) {
+          if (event is Uint8List) responseCompleter.complete(event);
+        },
+        onError: (e, s) {
+          responseCompleter.completeError(e, s);
+        },
+      );
+
+      bytes = await responseCompleter.future;
+
       isSaved = false;
     }
 
@@ -65,13 +77,15 @@ class _DecodedImages {
       key,
     );
 
-    if (!isSaved) _imageStorage.add(_decodedImages[key]!.imageInfoData);
+    if (!isSaved) _imagesHelper.add(_decodedImages[key]!.imageInfoData);
   }
 
   /// dispose an image by key
   ///
   /// the key is path if the image is local or assets, if it's a network image the key is the url
   void dispose(String key) {
+    _imagesHelper.threadOperation.cancleDownload(key.key);
+
     final selected = _decodedImages.remove(key.key);
 
     selected?.imageResolverResult.image.dispose();
@@ -83,6 +97,7 @@ class _DecodedImages {
   /// dispose all images
   void disposeAll() {
     for (String key in _decodedImages.keys) {
+      _imagesHelper.threadOperation.cancleDownload(key);
       _decodedImages[key]!.imageResolverResult.image.dispose();
       _decodedImages[key]!.imageResolverResult.codec?.dispose();
     }
@@ -93,11 +108,7 @@ class _DecodedImages {
   }
 
   bool contain(final String key) {
-    if (_decodedImages.containsKey(key) || _decoding.contains(key)) return true;
-
-    _decoding.add(key);
-
-    return false;
+    return _decodedImages.containsKey(key) || _decoding.contains(key);
   }
 
   Future<void> _addImage(final Uint8List bytes, final String key) async {

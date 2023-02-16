@@ -33,6 +33,12 @@ class ImageWidget extends StatelessWidget {
           onLoading: (context, height, width) => const Center(
             child: Icon(Icons.downloading),
           ),
+          progressBuilder: (context, progress) => Center(
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: Colors.red,
+            ),
+          ),
           onError: (context, error, stackTrace, retryCall) => Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,

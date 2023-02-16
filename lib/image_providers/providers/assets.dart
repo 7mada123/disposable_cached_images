@@ -27,7 +27,7 @@ class _AssetsImageProvider extends BaseImageProvider {
       state = state.copyWith(isLoading: true);
       imageInfo = ImageInfoData.init(key);
 
-      final bytes = await _imageStorage.getAssetBytes(
+      final bytes = await _imagesHelper.getAssetBytes(
         providerArguments.image,
       );
 

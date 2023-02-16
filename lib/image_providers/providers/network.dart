@@ -15,8 +15,7 @@ final _networkImageProvider = StateNotifierProvider.autoDispose
   );
 });
 
-class _NetworkImageProvider extends BaseImageProvider
-    with NetworkImageProviderPlatformMixin {
+class _NetworkImageProvider extends BaseImageProvider {
   _NetworkImageProvider({
     required super.ref,
     required super.providerArguments,
@@ -25,7 +24,7 @@ class _NetworkImageProvider extends BaseImageProvider
   @override
   Future<void> getImage() async {
     try {
-      final savedImageInfo = _imageStorage.getImageInfo(key);
+      final savedImageInfo = _imagesHelper.getImageInfo(key);
 
       if (savedImageInfo == null) {
         state = state.copyWith(isLoading: true);
@@ -41,7 +40,7 @@ class _NetworkImageProvider extends BaseImageProvider
 
         imageInfo = savedImageInfo;
 
-        final bytes = await _imageStorage.getBytes(key);
+        final bytes = await _imagesHelper.getBytes(key);
 
         if (bytes != null) {
           imageInfo = imageInfo.copyWith(imageBytes: bytes);
@@ -60,7 +59,31 @@ class _NetworkImageProvider extends BaseImageProvider
   }
 
   Future<void> handelNetworkImage() async {
-    final response = await getImageByetsFromUrl();
+    state = state.copyWith(isDownloading: true);
+
+    final Completer<Uint8List> responseCompleter = Completer();
+
+    _imagesHelper.threadOperation
+        .getNetworkBytes(
+      providerArguments.image,
+      providerArguments.headers,
+    )
+        .listen(
+      (event) {
+        if (event is Uint8List) {
+          responseCompleter.complete(event);
+        } else {
+          ref
+              .read(_downloadProgressProvider(providerArguments.image).notifier)
+              .state = event;
+        }
+      },
+      onError: (e, s) {
+        responseCompleter.completeError(e, s);
+      },
+    );
+
+    final response = await responseCompleter.future;
 
     imageInfo = imageInfo.copyWith(imageBytes: response);
 
@@ -76,7 +99,7 @@ class _NetworkImageProvider extends BaseImageProvider
           width: image.width,
         );
 
-        _imageStorage.add(imageInfo);
+        _imagesHelper.add(imageInfo);
       },
     );
   }
@@ -99,7 +122,7 @@ class _NetworkImageProvider extends BaseImageProvider
       imageBytes: result.resizedBytes,
     );
 
-    _imageStorage.add(imageInfo);
+    _imagesHelper.add(imageInfo);
 
     if (mounted) {
       if (result.isAnimated) {
