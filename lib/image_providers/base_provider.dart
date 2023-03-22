@@ -163,9 +163,7 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
     final int? width,
     final int? height,
   ) async {
-    if (state.uiImages.isEmpty ||
-        isAnimatedImage ||
-        state.uiImages.containsKey(key)) return;
+    if (state.uiImages.isEmpty || isAnimatedImage || state.uiImages.containsKey(key)) return;
 
     final tWidth = getTargetSize(width, imageInfo.width!);
     final tHeight = getTargetSize(height, imageInfo.height!);
@@ -194,9 +192,7 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
     final int? width,
     final int? height,
   ) async {
-    if (state.uiImages.isEmpty ||
-        isAnimatedImage ||
-        !state.uiImages.keys.contains(key)) return;
+    if (state.uiImages.isEmpty || isAnimatedImage || !state.uiImages.keys.contains(key)) return;
 
     final tWidth = getTargetSize(width, imageInfo.width!);
     final tHeight = getTargetSize(height, imageInfo.height!);
@@ -240,16 +236,14 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
   }
 }
 
-typedef DisposableImageProvider
-    = AutoDisposeStateNotifierProvider<BaseImageProvider, _ImageProviderState>;
+typedef DisposableImageProvider = AutoDisposeStateNotifierProviderFamily<BaseImageProvider, _ImageProviderState, _ImageProviderArguments>;
 
 extension on String {
   /// remove illegal file name characters when saving file
   static final illegalFilenameCharacters = RegExp(r'[/#<>$+%!`&*|{}?"=\\ @:]');
 
   String get key {
-    return substring(0, length > 255 ? 255 : length)
-        .replaceAll(illegalFilenameCharacters, '');
+    return substring(0, length > 255 ? 255 : length).replaceAll(illegalFilenameCharacters, '');
   }
 }
 
