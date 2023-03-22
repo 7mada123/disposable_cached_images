@@ -9,7 +9,7 @@ class _ImageDecoder {
 
   static final _queue = Queue<Future<void> Function()>();
 
-  static Future<void> _runImagesdecoder() async {
+  static Future<void> _runImagesDecoder() async {
     while (_queue.isNotEmpty && currentCount < maximumDownload) {
       currentCount++;
       _queue
@@ -18,7 +18,7 @@ class _ImageDecoder {
           .then((value) {
         currentCount--;
 
-        _runImagesdecoder();
+        _runImagesDecoder();
       });
     }
   }
@@ -31,7 +31,7 @@ class _ImageDecoder {
   }) async {
     _queue.add(() => _getImage(bytes, height, width, completer));
 
-    _runImagesdecoder();
+    _runImagesDecoder();
   }
 
   static void scheduleWithResizedBytes({
@@ -42,7 +42,7 @@ class _ImageDecoder {
   }) async {
     _queue.add(() => _getResizedBytesImage(bytes, height, width, completer));
 
-    _runImagesdecoder();
+    _runImagesDecoder();
   }
 
   static Future<void> _getImage(

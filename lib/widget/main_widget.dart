@@ -357,23 +357,27 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
   static Future<void> clearCache() => _imagesHelper.clearCache();
 
   @override
-  ConsumerState<DisposableCachedImage> createState() => _DisposableCachedImageState();
+  ConsumerState<DisposableCachedImage> createState() =>
+      _DisposableCachedImageState();
 }
 
-class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage> with SingleTickerProviderStateMixin {
+class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
+    with SingleTickerProviderStateMixin {
   late final AnimationController fadeAnimationController;
   late final String _sizeKey;
 
   @override
   void initState() {
-    _sizeKey = uiImageSizekey(widget.width?.toInt(), widget.height?.toInt());
+    _sizeKey = uiImageSizeKey(widget.width?.toInt(), widget.height?.toInt());
 
     _addImageSize();
 
     fadeAnimationController = AnimationController(
       vsync: this,
       duration: widget.fadeDuration,
-      value: ref.read(widget._provider(widget._arguments)).uiImages.isEmpty ? 0.0 : 1.0,
+      value: ref.read(widget._provider(widget._arguments)).uiImages.isEmpty
+          ? 0.0
+          : 1.0,
     );
 
     super.initState();
@@ -404,7 +408,10 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage> w
       if (providerState.isDownloading && widget.progressBuilder != null) {
         loading = _DownloadProgressWidget(
           progressBuilder: widget.progressBuilder!,
-          url: ref.read(widget._provider(widget._arguments).notifier).providerArguments.image,
+          url: ref
+              .read(widget._provider(widget._arguments).notifier)
+              .providerArguments
+              .image,
         );
       } else if (widget.onLoading != null) {
         loading = widget.onLoading!(
@@ -453,7 +460,9 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage> w
     final imageWidget = _RawImage(
       key: widget.key,
       opacity: fadeAnimationController,
-      image: widget.resizeImage ? providerState.getImage(_sizeKey) : providerState.uiImages['']!,
+      image: widget.resizeImage
+          ? providerState.getImage(_sizeKey)
+          : providerState.uiImages['']!,
       invertColors: widget.invertColors,
       matchTextDirection: widget.matchTextDirection,
       repeat: widget.repeat,

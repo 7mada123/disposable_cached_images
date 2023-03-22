@@ -48,5 +48,5 @@ abstract class ThreadOperationBase {
     final Map<String, String>? headers,
   );
 
-  void cancleDownload(final String url);
+  void cancelDownload(final String url);
 }

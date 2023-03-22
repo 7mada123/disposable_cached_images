@@ -7,9 +7,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../interfaces.dart';
-import '../../image_info_data.dart';
 import './dart_js.dart';
+import '../../image_info_data.dart';
+import '../interfaces.dart';
 
 HelperBase getInstance() => _HelperWeb();
 
@@ -92,15 +92,15 @@ class _HelperWeb extends HelperBase {
 
   @override
   Future<Uint8List> getLocalBytes(final String imagePath) async {
-    return _loaclimageFileBytes(imagePath);
+    return _localImageFileBytes(imagePath);
   }
 
   @override
   Future<Uint8List> getAssetBytes(String imagePath) async {
-    return _loaclimageFileBytes(imagePath);
+    return _localImageFileBytes(imagePath);
   }
 
-  static Future<Uint8List> _loaclimageFileBytes(final String imagePath) async {
+  static Future<Uint8List> _localImageFileBytes(final String imagePath) async {
     try {
       final byteData = await rootBundle.load(imagePath);
       return byteData.buffer.asUint8List();
@@ -163,7 +163,7 @@ class _ThreadOperationWeb extends ThreadOperationBase {
   }
 
   @override
-  void cancleDownload(String url) {
+  void cancelDownload(String url) {
     client.cancelDownload(url);
   }
 
