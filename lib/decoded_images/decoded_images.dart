@@ -84,7 +84,7 @@ class _DecodedImages {
   ///
   /// the key is path if the image is local or assets, if it's a network image the key is the url
   void dispose(String key) {
-    _imagesHelper.threadOperation.cancleDownload(key.key);
+    _imagesHelper.threadOperation.cancelDownload(key.key);
 
     final selected = _decodedImages.remove(key.key);
 
@@ -97,7 +97,7 @@ class _DecodedImages {
   /// dispose all images
   void disposeAll() {
     for (String key in _decodedImages.keys) {
-      _imagesHelper.threadOperation.cancleDownload(key);
+      _imagesHelper.threadOperation.cancelDownload(key);
       _decodedImages[key]!.imageResolverResult.image.dispose();
       _decodedImages[key]!.imageResolverResult.codec?.dispose();
     }

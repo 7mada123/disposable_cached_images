@@ -19,17 +19,17 @@ class _ThreadOperationIsolate extends ThreadOperationBase {
   late final Isolate isolate;
   Future<void> init() async {
     final runningSendPort =
-        IsolateNameServer.lookupPortByName("_imageshelperisolate");
+        IsolateNameServer.lookupPortByName("_imagesHelperIsolate");
     if (runningSendPort != null) {
       _sender = runningSendPort;
       isolate = Isolate(IsolateNameServer.lookupPortByName(
-          "_imageshelperisolate_controlport")!);
+          "_imagesHelperIsolate_controlPort")!);
       return;
     }
     final ReceivePort receivePort = ReceivePort();
-    final ReceivePort exitRecivePort = ReceivePort();
+    final ReceivePort exitReceivePort = ReceivePort();
     isolate = await Isolate.spawn<List<dynamic>>(
-      _imageshelperisolate,
+      _imagesHelperIsolate,
       [
         receivePort.sendPort,
         _cachePath,
@@ -38,16 +38,16 @@ class _ThreadOperationIsolate extends ThreadOperationBase {
       errorsAreFatal: false,
     );
     _sender = await receivePort.first;
-    isolate.addOnExitListener(exitRecivePort.sendPort);
-    exitRecivePort.listen((message) {
-      IsolateNameServer.removePortNameMapping("_imageshelperisolate");
+    isolate.addOnExitListener(exitReceivePort.sendPort);
+    exitReceivePort.listen((message) {
+      IsolateNameServer.removePortNameMapping("_imagesHelperIsolate");
       IsolateNameServer.removePortNameMapping(
-          "_imageshelperisolate_controlport");
-      exitRecivePort.close();
+          "_imagesHelperIsolate_controlPort");
+      exitReceivePort.close();
     });
-    IsolateNameServer.registerPortWithName(_sender, "_imageshelperisolate");
+    IsolateNameServer.registerPortWithName(_sender, "_imagesHelperIsolate");
     IsolateNameServer.registerPortWithName(
-        isolate.controlPort, "_imageshelperisolate_controlport");
+        isolate.controlPort, "_imagesHelperIsolate_controlPort");
     receivePort.close();
   }
 
@@ -84,12 +84,12 @@ class _ThreadOperationIsolate extends ThreadOperationBase {
   }
 
   @override
-  Future<void> cancleDownload(
+  Future<void> cancelDownload(
     String url,
   ) async {
     final receivePort = ReceivePort();
     _sender.send([
-      'cancleDownload',
+      'cancelDownload',
       receivePort.sendPort,
       url,
     ]);
@@ -176,7 +176,7 @@ class _ThreadOperationIsolate extends ThreadOperationBase {
   }
 }
 
-Future<void> _imageshelperisolate(final List<dynamic> message) async {
+Future<void> _imagesHelperIsolate(final List<dynamic> message) async {
   final ReceivePort port = ReceivePort();
   final _ThreadOperationIO instance = _ThreadOperationIO(
     message[1],
@@ -202,8 +202,8 @@ Future<void> _imageshelperisolate(final List<dynamic> message) async {
             sendPort.send(const IsolateGeneratorStreamCompleted());
           });
           break;
-        case 'cancleDownload':
-          instance.cancleDownload(
+        case 'cancelDownload':
+          instance.cancelDownload(
             message[2],
           );
           sendPort.send(null);

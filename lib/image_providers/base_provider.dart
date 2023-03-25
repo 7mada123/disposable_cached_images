@@ -15,7 +15,7 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
 
   @override
   void dispose() {
-    _imagesHelper.threadOperation.cancleDownload(providerArguments.image);
+    _imagesHelper.threadOperation.cancelDownload(providerArguments.image);
 
     for (final image in state.uiImages.values) {
       image.dispose();
@@ -142,7 +142,7 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
 
     if (providerArguments.resizeImage) {
       return addResizedImage(
-        uiImageSizekey(
+        uiImageSizeKey(
           providerArguments.widgetWidth,
           providerArguments.widgetHeight,
         ),
@@ -240,8 +240,8 @@ abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
   }
 }
 
-typedef DisposableImageProvider
-    = AutoDisposeStateNotifierProvider<BaseImageProvider, _ImageProviderState>;
+typedef DisposableImageProvider = AutoDisposeStateNotifierProviderFamily<
+    BaseImageProvider, _ImageProviderState, _ImageProviderArguments>;
 
 extension on String {
   /// remove illegal file name characters when saving file
@@ -253,14 +253,14 @@ extension on String {
   }
 }
 
-int? getTargetSize(final int? target, final int origanl) {
-  if (target != null && target > 0 && target < origanl) {
+int? getTargetSize(final int? target, final int original) {
+  if (target != null && target > 0 && target < original) {
     return target;
   } else {
     return null;
   }
 }
 
-String uiImageSizekey(final int? width, final int? height) {
+String uiImageSizeKey(final int? width, final int? height) {
   return '${height}x$width';
 }

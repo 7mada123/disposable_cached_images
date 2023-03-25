@@ -141,7 +141,7 @@ class _NetworkImageProvider extends BaseImageProvider {
 
     if (providerArguments.resizeImage) {
       addResizedImage(
-        uiImageSizekey(
+        uiImageSizeKey(
           providerArguments.widgetWidth,
           providerArguments.widgetHeight,
         ),

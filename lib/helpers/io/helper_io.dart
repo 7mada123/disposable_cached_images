@@ -220,8 +220,8 @@ class _ThreadOperationIO extends ThreadOperationBase {
 
       connections[url] = clientRequest;
 
-      final List<int> byetsList = [];
-      final int fullLenght = math.max(clientResponse.contentLength, 1);
+      final List<int> bytesList = [];
+      final int fullLength = math.max(clientResponse.contentLength, 1);
 
       late final StreamSubscription<List<int>> subscription;
 
@@ -229,13 +229,13 @@ class _ThreadOperationIO extends ThreadOperationBase {
 
       subscription = clientResponse.listen(
         (List<int> chunk) {
-          byetsList.addAll(chunk);
-          streamController.add((byetsList.length / fullLenght).clamp(0.0, 1.0));
+          bytesList.addAll(chunk);
+          streamController.add((bytesList.length / fullLength).clamp(0.0, 1.0));
         },
         onDone: () {
           subscription.cancel();
           responseCompleter.complete();
-          streamController.add(Uint8List.fromList(byetsList));
+          streamController.add(Uint8List.fromList(bytesList));
           streamController.close();
         },
         onError: (e, s) {
@@ -253,7 +253,7 @@ class _ThreadOperationIO extends ThreadOperationBase {
   }
 
   @override
-  void cancleDownload(final String url) {
+  void cancelDownload(final String url) {
     final request = connections.remove(url);
     runningRequests.remove(url);
 

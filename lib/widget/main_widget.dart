@@ -48,19 +48,18 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
           !resizeImage || width != null || height != null,
           'Either height or width must be specified when resizeImage is enabled',
         ),
-        _provider = _networkImageProvider(
-          _ImageProviderArguments(
-            image: imageUrl,
-            maxCacheWidth: maxCacheWidth,
-            maxCacheHeight: maxCacheHeight,
-            keepAlive: keepAlive,
-            headers: headers,
-            resizeImage: resizeImage,
-            keepBytesInMemory: keepBytesInMemory,
-            widgetHeight: height?.toInt(),
-            widgetWidth: width?.toInt(),
-          ),
+        _arguments = _ImageProviderArguments(
+          image: imageUrl,
+          maxCacheWidth: maxCacheWidth,
+          maxCacheHeight: maxCacheHeight,
+          keepAlive: keepAlive,
+          headers: headers,
+          resizeImage: resizeImage,
+          keepBytesInMemory: keepBytesInMemory,
+          widgetHeight: height?.toInt(),
+          widgetWidth: width?.toInt(),
         ),
+        _provider = _networkImageProvider,
         super(key: key);
 
   /// Create a widget that displays a local image from device storage
@@ -107,16 +106,15 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
         ),
         maxCacheWidth = null,
         maxCacheHeight = null,
-        _provider = _localImageProvider(
-          _ImageProviderArguments(
-            image: imagePath,
-            keepAlive: keepAlive,
-            resizeImage: resizeImage,
-            keepBytesInMemory: keepBytesInMemory,
-            widgetHeight: height?.toInt(),
-            widgetWidth: width?.toInt(),
-          ),
+        _arguments = _ImageProviderArguments(
+          image: imagePath,
+          keepAlive: keepAlive,
+          resizeImage: resizeImage,
+          keepBytesInMemory: keepBytesInMemory,
+          widgetHeight: height?.toInt(),
+          widgetWidth: width?.toInt(),
         ),
+        _provider = _localImageProvider,
         progressBuilder = null,
         super(key: key);
 
@@ -164,16 +162,15 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
         ),
         maxCacheWidth = null,
         maxCacheHeight = null,
-        _provider = _assetsImageProvider(
-          _ImageProviderArguments(
-            image: imagePath,
-            keepBytesInMemory: keepBytesInMemory,
-            keepAlive: keepAlive,
-            resizeImage: resizeImage,
-            widgetHeight: height?.toInt(),
-            widgetWidth: width?.toInt(),
-          ),
+        _arguments = _ImageProviderArguments(
+          image: imagePath,
+          keepBytesInMemory: keepBytesInMemory,
+          keepAlive: keepAlive,
+          resizeImage: resizeImage,
+          widgetHeight: height?.toInt(),
+          widgetWidth: width?.toInt(),
         ),
+        _provider = _assetsImageProvider,
         progressBuilder = null,
         super(key: key);
 
@@ -352,6 +349,8 @@ class DisposableCachedImage extends ConsumerStatefulWidget {
 
   final DisposableImageProvider _provider;
 
+  final _ImageProviderArguments _arguments;
+
   final Widget Function(BuildContext context, double progress)? progressBuilder;
 
   /// Remove all cached images form device storage.
@@ -369,14 +368,16 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
 
   @override
   void initState() {
-    _sizeKey = uiImageSizekey(widget.width?.toInt(), widget.height?.toInt());
+    _sizeKey = uiImageSizeKey(widget.width?.toInt(), widget.height?.toInt());
 
     _addImageSize();
 
     fadeAnimationController = AnimationController(
       vsync: this,
       duration: widget.fadeDuration,
-      value: ref.read(widget._provider).uiImages.isEmpty ? 0.0 : 1.0,
+      value: ref.read(widget._provider(widget._arguments)).uiImages.isEmpty
+          ? 0.0
+          : 1.0,
     );
 
     super.initState();
@@ -399,7 +400,7 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
 
   @override
   Widget build(final context) {
-    final providerState = ref.watch(widget._provider);
+    final providerState = ref.watch(widget._provider(widget._arguments));
 
     if (providerState.isLoading) {
       Widget loading = const SizedBox();
@@ -407,7 +408,10 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
       if (providerState.isDownloading && widget.progressBuilder != null) {
         loading = _DownloadProgressWidget(
           progressBuilder: widget.progressBuilder!,
-          url: ref.read(widget._provider.notifier).providerArguments.image,
+          url: ref
+              .read(widget._provider(widget._arguments).notifier)
+              .providerArguments
+              .image,
         );
       } else if (widget.onLoading != null) {
         loading = widget.onLoading!(
@@ -438,7 +442,7 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
           context,
           providerState.error!,
           providerState.stackTrace!,
-          () => ref.refresh(widget._provider.notifier),
+          () => ref.refresh(widget._provider(widget._arguments).notifier),
         );
       } else {
         debugPrint(
@@ -498,7 +502,7 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
   void _addImageSize() {
     if (!widget.resizeImage) return;
 
-    ref.read(widget._provider.notifier).addResizedImage(
+    ref.read(widget._provider(widget._arguments).notifier).addResizedImage(
           _sizeKey,
           widget.width?.toInt(),
           widget.isDynamicHeight ? null : widget.height?.toInt(),
@@ -508,7 +512,7 @@ class _DisposableCachedImageState extends ConsumerState<DisposableCachedImage>
   void _updateImageSize() {
     if (!widget.resizeImage) return;
 
-    ref.read(widget._provider.notifier).updateResizedImage(
+    ref.read(widget._provider(widget._arguments).notifier).updateResizedImage(
           _sizeKey,
           widget.width?.toInt(),
           widget.isDynamicHeight ? null : widget.height?.toInt(),

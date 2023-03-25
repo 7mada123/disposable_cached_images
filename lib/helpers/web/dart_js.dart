@@ -16,7 +16,7 @@ external Future<dynamic> jsInvokeMethod(
     String method, dynamic param1, dynamic param2);
 
 @JS()
-external void jsInvokeDwonloadMethod(
+external void jsInvokeDownloadMethod(
     String method, String url, String? headers);
 
 // JSIndexedDb
@@ -26,7 +26,7 @@ class JSIndexedDb {
   Future<dynamic> open() async {
     final res = await promiseToFutureAsMap(jsInvokeMethod("init", null, null));
 
-    if (res == null) throw Exception("no data recived from js");
+    if (res == null) throw Exception("no data received from js");
 
     if (res["error"] != null) throw Exception(res["error"]);
 
@@ -40,7 +40,7 @@ class JSIndexedDb {
       jsInvokeMethod("getAllKeys", null, null),
     );
 
-    if (res == null) throw Exception("no data recived from js");
+    if (res == null) throw Exception("no data received from js");
 
     if (res["error"] != null) throw Exception(res["error"]);
 
@@ -52,7 +52,7 @@ class JSIndexedDb {
       jsInvokeMethod("getImage", key, null),
     );
 
-    if (res == null) throw Exception("no data recived from js");
+    if (res == null) throw Exception("no data received from js");
 
     if (res["error"] != null) throw Exception(res["error"]);
 
@@ -64,7 +64,7 @@ class JSIndexedDb {
       jsInvokeMethod("addToCache", imageBytes, key),
     );
 
-    if (res == null) throw Exception("no data recived from js");
+    if (res == null) throw Exception("no data received from js");
 
     if (res["error"] != null) throw Exception(res["error"]);
   }
@@ -74,7 +74,7 @@ class JSIndexedDb {
       jsInvokeMethod("clearCache", null, null),
     );
 
-    if (res == null) throw Exception("no data recived from js");
+    if (res == null) throw Exception("no data received from js");
 
     if (res["error"] != null) throw Exception(res["error"]);
   }
@@ -119,7 +119,7 @@ class JSHttpClientHelper {
 
     _downloadStreams[url] = controller;
 
-    jsInvokeDwonloadMethod(
+    jsInvokeDownloadMethod(
       "download",
       url,
       headers != null ? json.encode(headers) : null,
