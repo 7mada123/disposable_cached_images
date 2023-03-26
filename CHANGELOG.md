@@ -1,3 +1,7 @@
+## 1.2.1
+
+Fix type casting exception [#8](https://github.com/7mada123/disposable_cached_images/pull/8)
+
 ## 1.2.0
 
 improve web performance with Web-Worker

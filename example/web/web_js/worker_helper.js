@@ -18,7 +18,7 @@ window.jsInvokeMethod = async (method, params1, params2) => {
     return res;
 }
 
-window.jsInvokeDwonloadMethod = async (method, params1, params2) => {
+window.jsInvokeDownloadMethod = async (method, params1, params2) => {
     sendMessageToWorker(method, params1, params2);
 }
 

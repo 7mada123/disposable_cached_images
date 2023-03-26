@@ -254,12 +254,8 @@ class _ThreadOperationIO extends ThreadOperationBase {
 
   @override
   void cancelDownload(final String url) {
-    final request = connections.remove(url);
     runningRequests.remove(url);
-
-    if (request == null) return;
-
-    request.abort();
+    connections.remove(url)?.abort();
   }
 
   @override
