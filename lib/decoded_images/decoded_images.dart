@@ -1,6 +1,6 @@
 // ignore_for_file: curly_braces_in_flow_control_structures, library_private_types_in_public_api
 
-part of disposable_cached_images;
+part of disposable_cached_images_io;
 
 class _DecodedImages {
   final int? _capacity;
@@ -41,6 +41,29 @@ class _DecodedImages {
       bytes,
       key,
     );
+  }
+
+  Future<Uint8List?> get(String url) async {
+    final key = url.key;
+
+    Uint8List? bytes = await _imagesHelper.getBytes(key);
+
+    if (bytes == null) {
+      final Completer<Uint8List> responseCompleter = Completer();
+
+      _imagesHelper.threadOperation.getNetworkBytes(url, null).listen(
+        (event) {
+          if (event is Uint8List) responseCompleter.complete(event);
+        },
+        onError: (e, s) {
+          responseCompleter.completeError(e, s);
+        },
+      );
+
+      bytes = await responseCompleter.future;
+    }
+
+    return bytes;
   }
 
   /// decode network images

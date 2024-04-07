@@ -5,9 +5,9 @@ class ImageWidget extends StatelessWidget {
   final String imageUrl;
 
   const ImageWidget({
-    Key? key,
+    super.key,
     required this.imageUrl,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +37,7 @@ class ImageWidget extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               backgroundColor: Colors.red,
+              color: Colors.blue,
             ),
           ),
           onError: (context, error, stackTrace, retryCall) => Center(
@@ -78,6 +79,7 @@ class ImageViewScreen extends StatelessWidget {
             child: DisposableCachedImage.network(
               imageUrl: imageUrl,
               width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height * 0.9,
               onLoading: (context, height, width) => const Center(
                 child: Icon(Icons.downloading),
               ),

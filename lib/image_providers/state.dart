@@ -1,4 +1,4 @@
-part of disposable_cached_images;
+part of disposable_cached_images_io;
 
 class _ImageProviderState {
   final bool isLoading, isDownloading;

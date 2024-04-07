@@ -1,10 +1,4 @@
-import 'dart:async';
-import 'dart:typed_data';
-
-import '../image_info_data.dart';
-import 'helper_stub.dart'
-    if (dart.library.io) './io/helper_io.dart'
-    if (dart.library.html) './web/helper_web.dart';
+part of disposable_cached_images_io;
 
 /// The image cache interface
 abstract class HelperBase {
@@ -14,7 +8,7 @@ abstract class HelperBase {
 
   const HelperBase();
 
-  Future<void> init(final bool enableWebCache, int maximumDownload);
+  Future<void> init(int maximumDownload);
 
   void add(final ImageInfoData imageInfo);
 

@@ -1,6 +1,6 @@
 // ignore_for_file: library_private_types_in_public_api
 
-part of disposable_cached_images;
+part of disposable_cached_images_io;
 
 abstract class BaseImageProvider extends StateNotifier<_ImageProviderState> {
   final Ref ref;

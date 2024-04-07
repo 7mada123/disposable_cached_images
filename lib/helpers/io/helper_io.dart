@@ -1,18 +1,4 @@
-import 'dart:collection';
-import 'dart:convert';
-import 'dart:io';
-import 'dart:math' as math;
-import 'dart:ui';
-
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:isolate_generator_annotation/isolate_generator_annotation.dart';
-import 'package:path_provider/path_provider.dart';
-
-import '../../image_info_data.dart';
-import '../interfaces.dart';
-
-part 'helper_io.g.dart';
+part of disposable_cached_images_io;
 
 HelperBase getInstance() => _HelperIO();
 
@@ -27,7 +13,7 @@ class _HelperIO extends HelperBase {
   late final _ThreadOperationIsolate threadOperation;
 
   @override
-  Future<void> init(final bool enableWebCache, int maximumDownload) async {
+  Future<void> init(int maximumDownload) async {
     final path = (await getTemporaryDirectory()).path;
 
     final cachePath = '$path/images_cache/';

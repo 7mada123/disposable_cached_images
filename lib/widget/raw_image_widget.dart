@@ -1,4 +1,4 @@
-part of disposable_cached_images;
+part of disposable_cached_images_io;
 
 /// [RawImage] with [BorderRadius] and [BoxShape]
 class _RawImage extends RawImage {

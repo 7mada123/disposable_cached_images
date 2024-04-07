@@ -1,6 +1,6 @@
 // ignore_for_file: library_private_types_in_public_api
 
-part of disposable_cached_images;
+part of disposable_cached_images_io;
 
 /// {@template runAppWithDisposableCachedImage}
 /// A wrapper function to initialize [DisposableCachedImage].
@@ -34,8 +34,6 @@ class DisposableImages extends StatelessWidget {
   final Widget child;
 
   static Future<void> init({
-    final bool enableWebCache = true,
-
     /// specify the maximum number of images to be decoded simultaneously
     ///
     /// increasing this number may impact the performance, default to 1
@@ -48,12 +46,12 @@ class DisposableImages extends StatelessWidget {
 
     /// specify the maximum number of decoded images that should be kept in memory when using [DisposableImages.decodedImages]
     final int? maximumDecodedImagesCount,
-  }) {
+  }) async {
     decodedImages = _DecodedImages(maximumDecodedImagesCount);
 
     _ImageDecoder.maximumDownload = maximumDecode;
 
-    return _imagesHelper.init(enableWebCache, maximumDownload);
+    return _imagesHelper.init(maximumDownload);
   }
 
   @override

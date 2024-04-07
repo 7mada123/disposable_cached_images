@@ -1,6 +1,60 @@
-part of disposable_cached_images;
+part of disposable_cached_images_io;
 
 class DisposableCachedImage extends ConsumerStatefulWidget {
+  DisposableCachedImage.bytes({
+    this.keepAlive = false,
+    required final Uint8List bytes,
+    final Map<String, String>? headers,
+    this.maxCacheWidth,
+    this.maxCacheHeight,
+    this.fit,
+    this.centerSlice,
+    this.scale = 1.0,
+    this.addRepaintBoundaries = true,
+    this.onImage,
+    this.shape = BoxShape.rectangle,
+    this.color,
+    this.alignment = Alignment.center,
+    this.onLoading,
+    this.isAntiAlias = false,
+    this.invertColors = false,
+    this.height,
+    this.colorBlendMode,
+    this.resizeImage = false,
+    this.isDynamicHeight = false,
+    this.matchTextDirection = false,
+    this.borderRadius,
+    this.width,
+    this.repeat = ImageRepeat.noRepeat,
+    this.filterQuality = FilterQuality.none,
+    this.onError,
+    this.fadeDuration = const Duration(milliseconds: 300),
+    final Key? key,
+    this.keepBytesInMemory = true,
+    this.progressBuilder,
+  })  : assert(
+          !isDynamicHeight || width != null,
+          'Image width must be specified for dynamic size',
+        ),
+        assert(
+          !resizeImage || width != null || height != null,
+          'Either height or width must be specified when resizeImage is enabled',
+        ),
+        _arguments = _ImageProviderArguments(
+          image: "",
+          bytes: bytes,
+          maxCacheWidth: maxCacheWidth,
+          maxCacheHeight: maxCacheHeight,
+          keepAlive: keepAlive,
+          headers: headers,
+          resizeImage: resizeImage,
+          keepBytesInMemory: keepBytesInMemory,
+          widgetHeight: height?.toInt(),
+          widgetWidth: width?.toInt(),
+        ),
+        _provider = _bytesImageProvider,
+        super(key: key);
+
   /// Create a widget that displays image from the network and
   /// cache it in cache directory.
   ///

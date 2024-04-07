@@ -1,6 +1,6 @@
 // ignore_for_file: curly_braces_in_flow_control_structures
 
-part of disposable_cached_images;
+part of disposable_cached_images_io;
 
 final _localImageProvider = StateNotifierProvider.autoDispose
     .family<BaseImageProvider, _ImageProviderState, _ImageProviderArguments>((

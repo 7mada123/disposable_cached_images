@@ -1,3 +1,11 @@
+## 1.2.3
+
+Deprecated web support, now the package will use the native flutter [Image](https://api.flutter.dev/flutter/widgets/Image-class.html) widget
+
+added `DisposableCachedImage.bytes` to display an image from [Uint8List](https://api.flutter.dev/flutter/dart-typed_data/Uint8List-class.html)
+
+update docs and example
+
 ## 1.2.1
 
 Fix type casting exception [#8](https://github.com/7mada123/disposable_cached_images/pull/8)

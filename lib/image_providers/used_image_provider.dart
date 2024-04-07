@@ -1,4 +1,4 @@
-part of disposable_cached_images;
+part of disposable_cached_images_io;
 
 final _usedImageProvider = Provider<_UsedImageProviders>((final ref) {
   return const _UsedImageProviders();

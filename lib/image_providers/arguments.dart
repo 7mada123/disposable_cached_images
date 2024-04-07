@@ -1,4 +1,4 @@
-part of disposable_cached_images;
+part of disposable_cached_images_io;
 
 class _ImageProviderArguments {
   final int? maxCacheWidth, maxCacheHeight;
@@ -6,6 +6,7 @@ class _ImageProviderArguments {
   final Map<String, String>? headers;
   final bool keepAlive, resizeImage, keepBytesInMemory;
   final String image;
+  final Uint8List? bytes;
 
   const _ImageProviderArguments({
     required this.resizeImage,
@@ -15,6 +16,7 @@ class _ImageProviderArguments {
     this.maxCacheHeight,
     this.widgetHeight,
     this.widgetWidth,
+    this.bytes,
     this.headers,
     this.keepAlive = false,
   });
@@ -23,9 +25,11 @@ class _ImageProviderArguments {
   bool operator ==(final Object other) {
     if (identical(this, other)) return true;
 
-    return other is _ImageProviderArguments && other.hashCode == hashCode;
+    return other is _ImageProviderArguments &&
+        other.hashCode == hashCode &&
+        listEquals(other.bytes, bytes);
   }
 
   @override
-  int get hashCode => image.hashCode;
+  int get hashCode => image.hashCode ^ bytes.hashCode;
 }

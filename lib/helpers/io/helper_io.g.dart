@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'helper_io.dart';
+part of disposable_cached_images_io;
 
 // **************************************************************************
 // IsolateGenerator
@@ -19,10 +19,10 @@ class _ThreadOperationIsolate extends ThreadOperationBase {
   late final Isolate isolate;
   Future<void> init() async {
     final runningSendPort =
-        IsolateNameServer.lookupPortByName("_imagesHelperIsolate");
+        ui.IsolateNameServer.lookupPortByName("_imagesHelperIsolate");
     if (runningSendPort != null) {
       _sender = runningSendPort;
-      isolate = Isolate(IsolateNameServer.lookupPortByName(
+      isolate = Isolate(ui.IsolateNameServer.lookupPortByName(
           "_imagesHelperIsolate_controlPort")!);
       return;
     }
@@ -40,13 +40,13 @@ class _ThreadOperationIsolate extends ThreadOperationBase {
     _sender = await receivePort.first;
     isolate.addOnExitListener(exitReceivePort.sendPort);
     exitReceivePort.listen((message) {
-      IsolateNameServer.removePortNameMapping("_imagesHelperIsolate");
-      IsolateNameServer.removePortNameMapping(
+      ui.IsolateNameServer.removePortNameMapping("_imagesHelperIsolate");
+      ui.IsolateNameServer.removePortNameMapping(
           "_imagesHelperIsolate_controlPort");
       exitReceivePort.close();
     });
-    IsolateNameServer.registerPortWithName(_sender, "_imagesHelperIsolate");
-    IsolateNameServer.registerPortWithName(
+    ui.IsolateNameServer.registerPortWithName(_sender, "_imagesHelperIsolate");
+    ui.IsolateNameServer.registerPortWithName(
         isolate.controlPort, "_imagesHelperIsolate_controlPort");
     receivePort.close();
   }
