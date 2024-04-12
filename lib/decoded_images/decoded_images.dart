@@ -74,8 +74,6 @@ class _DecodedImages {
 
     if (contain(key)) return;
 
-    bool isSaved = true;
-
     Uint8List? bytes = await _imagesHelper.getBytes(key);
 
     if (bytes == null) {
@@ -91,8 +89,6 @@ class _DecodedImages {
       );
 
       bytes = await responseCompleter.future;
-
-      isSaved = false;
     }
 
     await _addImage(
@@ -100,7 +96,8 @@ class _DecodedImages {
       key,
     );
 
-    if (!isSaved) _imagesHelper.add(_decodedImages[key]!.imageInfoData);
+    if (_decodedImages.containsKey(key))
+      _imagesHelper.add(_decodedImages[key]!.imageInfoData);
   }
 
   /// dispose an image by key
